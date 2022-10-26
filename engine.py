@@ -76,6 +76,8 @@ class Engine:
         self.swapchainFrames = bundle.frames
         self.swapchainFormat = bundle.format
         self.swapchainExtent = bundle.extent
+        self.maxFramesInFlight = len(self.swapchainFrames)
+        self.frameNumber = 0
 
     def make_pipeline(self):
 
@@ -120,9 +122,10 @@ class Engine:
             commandbufferInput, self.debugMode
         )
 
-        self.inFlightFence = sync.make_fence(self.device, self.debugMode)
-        self.imageAvailable = sync.make_semaphore(self.device, self.debugMode)
-        self.renderFinished = sync.make_semaphore(self.device, self.debugMode)
+        for frame in self.swapchainFrames:
+            frame.inFlight = sync.make_fence(self.device, self.debugMode)
+            frame.imageAvailable = sync.make_semaphore(self.device, self.debugMode)
+            frame.renderFinished = sync.make_semaphore(self.device, self.debugMode)
 
     def record_draw_commands(self, commandBuffer, imageIndex):
 
@@ -168,44 +171,46 @@ class Engine:
         vkQueuePresentKHR = vkGetDeviceProcAddr(self.device, 'vkQueuePresentKHR')
 
         vkWaitForFences(
-            device = self.device, fenceCount = 1, pFences = [self.inFlightFence,], 
+            device = self.device, fenceCount = 1, pFences = [self.swapchainFrames[self.frameNumber].inFlight,], 
             waitAll = VK_TRUE, timeout = 1000000000
         )
         vkResetFences(
-            device = self.device, fenceCount = 1, pFences = [self.inFlightFence,]
+            device = self.device, fenceCount = 1, pFences = [self.swapchainFrames[self.frameNumber].inFlight,]
         )
 
         imageIndex = vkAcquireNextImageKHR(
             device = self.device, swapchain = self.swapchain, timeout = 1000000000, 
-            semaphore = self.imageAvailable, fence = VK_NULL_HANDLE
+            semaphore = self.swapchainFrames[self.frameNumber].imageAvailable, fence = VK_NULL_HANDLE
         )
 
-        commandBuffer = self.swapchainFrames[imageIndex].commandbuffer
+        commandBuffer = self.swapchainFrames[self.frameNumber].commandbuffer
         vkResetCommandBuffer(commandBuffer = commandBuffer, flags = 0)
         self.record_draw_commands(commandBuffer, imageIndex)
 
         submitInfo = VkSubmitInfo(
-            waitSemaphoreCount = 1, pWaitSemaphores = [self.imageAvailable,], 
+            waitSemaphoreCount = 1, pWaitSemaphores = [self.swapchainFrames[self.frameNumber].imageAvailable,], 
             pWaitDstStageMask=[VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,],
             commandBufferCount = 1, pCommandBuffers = [commandBuffer,], signalSemaphoreCount = 1,
-            pSignalSemaphores = [self.renderFinished,]
+            pSignalSemaphores = [self.swapchainFrames[self.frameNumber].renderFinished,]
         )
 
         try:
             vkQueueSubmit(
                 queue = self.graphicsQueue, submitCount = 1, 
-                pSubmits = submitInfo, fence = self.inFlightFence
+                pSubmits = submitInfo, fence = self.swapchainFrames[self.frameNumber].inFlight
             )
         except:
             if self.debugMode:
                 print("Failed to submit draw commands")
         
         presentInfo = VkPresentInfoKHR(
-            waitSemaphoreCount = 1, pWaitSemaphores = [self.renderFinished,],
+            waitSemaphoreCount = 1, pWaitSemaphores = [self.swapchainFrames[self.frameNumber].renderFinished,],
             swapchainCount = 1, pSwapchains = [self.swapchain,],
             pImageIndices = [imageIndex,]
         )
         vkQueuePresentKHR(self.presentQueue, presentInfo)
+
+        self.frameNumber = (self.frameNumber + 1) % self.maxFramesInFlight
 
     def close(self):
 
@@ -213,10 +218,6 @@ class Engine:
 
         if self.debugMode:
             print("Goodbye see you!\n")
-
-        vkDestroyFence(self.device, self.inFlightFence, None)
-        vkDestroySemaphore(self.device, self.imageAvailable, None)
-        vkDestroySemaphore(self.device, self.renderFinished, None)
 
         vkDestroyCommandPool(self.device, self.commandPool, None)
 
@@ -231,6 +232,9 @@ class Engine:
             vkDestroyFramebuffer(
                 device = self.device, framebuffer = frame.framebuffer, pAllocator = None
             )
+            vkDestroyFence(self.device, frame.inFlight, None)
+            vkDestroySemaphore(self.device, frame.imageAvailable, None)
+            vkDestroySemaphore(self.device, frame.renderFinished, None)
         
         destructionFunction = vkGetDeviceProcAddr(self.device, 'vkDestroySwapchainKHR')
         destructionFunction(self.device, self.swapchain, None)
