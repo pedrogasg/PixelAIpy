@@ -7,7 +7,7 @@ import pipeline
 import framebuffer
 import commands
 import sync
-import triangle_mesh
+import vertex_menagerie
 
 class Engine:
 
@@ -179,13 +179,63 @@ class Engine:
 
     def make_assets(self):
 
-        self.triangle_mesh = triangle_mesh.TriangleMesh(self.device, self.physicalDevice)
+        self.meshes = vertex_menagerie.VertexMenagerie()
+        
+        vertices = np.array(
+            (0.0, -0.05, 0.0, 1.0, 0.0,
+             0.05, 0.05, 0.0, 1.0, 0.0,
+            -0.05, 0.05, 0.0, 1.0, 0.0), dtype = np.float32
+        )
+        meshType = TRIANGLE
+        self.meshes.consume(meshType, vertices)
+
+        vertices = np.array(
+            (-0.05,  0.05, 1.0, 0.0, 0.0,
+		     -0.05, -0.05, 1.0, 0.0, 0.0,
+		      0.05, -0.05, 1.0, 0.0, 0.0,
+		      0.05, -0.05, 1.0, 0.0, 0.0,
+		      0.05,  0.05, 1.0, 0.0, 0.0,
+		     -0.05,  0.05, 1.0, 0.0, 0.0), dtype = np.float32
+        )
+        meshType = SQUARE
+        self.meshes.consume(meshType, vertices)
+
+        vertices = np.array(
+            (-0.05, -0.025, 0.0, 0.0, 1.0,
+		     -0.02, -0.025, 0.0, 0.0, 1.0,
+             -0.03,    0.0, 0.0, 0.0, 1.0,
+		     -0.02, -0.025, 0.0, 0.0, 1.0,
+		       0.0,  -0.05, 0.0, 0.0, 1.0,
+		      0.02, -0.025, 0.0, 0.0, 1.0,
+		     -0.03,    0.0, 0.0, 0.0, 1.0,
+		     -0.02, -0.025, 0.0, 0.0, 1.0,
+		      0.02, -0.025, 0.0, 0.0, 1.0,
+		      0.02, -0.025, 0.0, 0.0, 1.0,
+		      0.05, -0.025, 0.0, 0.0, 1.0,
+		      0.03,    0.0, 0.0, 0.0, 1.0,
+		     -0.03,    0.0, 0.0, 0.0, 1.0,
+		      0.02, -0.025, 0.0, 0.0, 1.0,
+		      0.03,    0.0, 0.0, 0.0, 1.0,
+		      0.03,    0.0, 0.0, 0.0, 1.0,
+		      0.04,   0.05, 0.0, 0.0, 1.0,
+		       0.0,   0.01, 0.0, 0.0, 1.0,
+		     -0.03,    0.0, 0.0, 0.0, 1.0,
+		      0.03,    0.0, 0.0, 0.0, 1.0,
+		       0.0,   0.01, 0.0, 0.0, 1.0,
+		     -0.03,    0.0, 0.0, 0.0, 1.0,
+		       0.0,   0.01, 0.0, 0.0, 1.0,
+		     -0.04,   0.05, 0.0, 0.0, 1.0), dtype = np.float32
+        )
+        meshType = STAR
+        self.meshes.consume(meshType, vertices)
+
+        self.meshes.finalize(self.device, self.physicalDevice)
     
     def prepare_scene(self, commandBuffer):
 
         vkCmdBindVertexBuffers(
             commandBuffer = commandBuffer, firstBinding = 0,
-            bindingCount = 1, pBuffers = (self.triangle_mesh.vertex_buffer.buffer,),
+            bindingCount = 1, pBuffers = (self.meshes.vertex_buffer.buffer,),
             pOffsets = (0,)
         )
 
@@ -213,21 +263,52 @@ class Engine:
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self.pipeline)
 
         self.prepare_scene(commandBuffer)
-        
+        firstVertex = self.meshes.offsets[TRIANGLE]
+        vertexCount = self.meshes.sizes[TRIANGLE]
         for position in scene.triangle_positions:
             
             model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
-            #objData = ffi.cast("float *", model_transform.ctypes.data)
             objData = ffi.cast("float *", ffi.from_buffer(model_transform))
-            #objData = ffi.cast("float *", model_transform.__array_interface__["data"][0])
             vkCmdPushConstants(
                 commandBuffer=commandBuffer, layout = self.pipelineLayout,
                 stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
                 size = 4 * 4 * 4, pValues = objData
             )
             vkCmdDraw(
-                commandBuffer = commandBuffer, vertexCount = 3, 
-                instanceCount = 1, firstVertex = 0, firstInstance = 0
+                commandBuffer = commandBuffer, vertexCount = vertexCount, 
+                instanceCount = 1, firstVertex = firstVertex, firstInstance = 0
+            )
+        
+        firstVertex = self.meshes.offsets[SQUARE]
+        vertexCount = self.meshes.sizes[SQUARE]
+        for position in scene.square_positions:
+            
+            model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
+            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
+            vkCmdPushConstants(
+                commandBuffer=commandBuffer, layout = self.pipelineLayout,
+                stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
+                size = 4 * 4 * 4, pValues = objData
+            )
+            vkCmdDraw(
+                commandBuffer = commandBuffer, vertexCount = vertexCount, 
+                instanceCount = 1, firstVertex = firstVertex, firstInstance = 0
+            )
+        
+        firstVertex = self.meshes.offsets[STAR]
+        vertexCount = self.meshes.sizes[STAR]
+        for position in scene.star_positions:
+            
+            model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
+            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
+            vkCmdPushConstants(
+                commandBuffer=commandBuffer, layout = self.pipelineLayout,
+                stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
+                size = 4 * 4 * 4, pValues = objData
+            )
+            vkCmdDraw(
+                commandBuffer = commandBuffer, vertexCount = vertexCount, 
+                instanceCount = 1, firstVertex = firstVertex, firstInstance = 0
             )
         
         vkCmdEndRenderPass(commandBuffer)
@@ -328,7 +409,7 @@ class Engine:
         
         self.cleanup_swapchain()
 
-        self.triangle_mesh.destroy()
+        self.meshes.destroy()
         
         vkDestroyDevice(
             device = self.device, pAllocator = None
