@@ -4,6 +4,7 @@ import logging
 import device
 import swapchain
 import frame
+import pipeline
 
 class Engine:
 
@@ -24,6 +25,7 @@ class Engine:
         self.build_gflw_window()
         self.make_instance()
         self.make_device()
+        self.make_pipeline()
 
     def build_gflw_window(self):
 
@@ -89,10 +91,30 @@ class Engine:
         self.swapchainFormat = bundle.format
         self.swapchainExtent = bundle.extent
 
+    def make_pipeline(self):
+
+        inputBundle = pipeline.InputBundle(
+            device = self.device,
+            swapchainImageFormat = self.swapchainFormat,
+            swapchainExtent = self.swapchainExtent,
+            vertexFilepath = "shaders/vert.spv",
+            fragmentFilepath = "shaders/frag.spv"
+        )
+
+        outputBundle = pipeline.create_graphics_pipeline(inputBundle, self.debugMode)
+
+        self.pipelineLayout = outputBundle.pipelineLayout
+        self.renderpass = outputBundle.renderPass
+        self.pipeline = outputBundle.pipeline
+
     def close(self):
 
         if self.debugMode:
             print("Goodbye see you!\n")
+
+        vkDestroyPipeline(self.device, self.pipeline, None)
+        vkDestroyPipelineLayout(self.device, self.pipelineLayout, None)
+        vkDestroyRenderPass(self.device, self.renderpass, None)
         
         for frame in self.swapchainFrames:
             vkDestroyImageView(
