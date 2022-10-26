@@ -1,6 +1,7 @@
 from config import *
 import instance
 import logging
+import device
 
 class Engine:
 
@@ -20,7 +21,7 @@ class Engine:
         
         self.build_gflw_window()
         self.make_instance()
-        self.make_debug_messenger()
+        self.make_device()
 
     def build_gflw_window(self):
 
@@ -44,11 +45,13 @@ class Engine:
     def make_instance(self):
 
         self.instance = instance.make_instance(self.debugMode, "ID tech 12")
-    
-    def make_debug_messenger(self):
 
         if self.debugMode:
             self.debugMessenger = logging.make_debug_messenger(self.instance)
+    
+    def make_device(self):
+
+        self.physicalDevice = device.choose_physical_device(self.instance, self.debugMode)
 
     def close(self):
 
