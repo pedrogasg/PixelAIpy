@@ -2,6 +2,8 @@ from config import *
 import instance
 import logging
 import device
+import swapchain
+import frame
 
 class Engine:
 
@@ -77,13 +79,13 @@ class Engine:
         self.graphicsQueue = queues[0]
         self.presentQueue = queues[1]
         
-        bundle = device.create_swapchain(
+        bundle = swapchain.create_swapchain(
             self.instance, self.device, self.physicalDevice, self.surface,
             self.width, self.height, self.debugMode
         )
 
         self.swapchain = bundle.swapchain
-        self.swapchainImages = bundle.images
+        self.swapchainFrames = bundle.frames
         self.swapchainFormat = bundle.format
         self.swapchainExtent = bundle.extent
 
@@ -91,6 +93,11 @@ class Engine:
 
         if self.debugMode:
             print("Goodbye see you!\n")
+        
+        for frame in self.swapchainFrames:
+            vkDestroyImageView(
+                device = self.device, imageView = frame.image_view, pAllocator = None
+            )
         
         destructionFunction = vkGetDeviceProcAddr(self.device, 'vkDestroySwapchainKHR')
         destructionFunction(self.device, self.swapchain, None)
