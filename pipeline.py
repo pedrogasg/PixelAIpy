@@ -63,9 +63,14 @@ def create_render_pass(device, swapchainImageFormat):
 
 def create_pipeline_layout(device):
 
+    pushConstantInfo = VkPushConstantRange(
+        stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
+        size = 4 * 4 * 4
+    )
+
     pipelineLayoutInfo = VkPipelineLayoutCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        pushConstantRangeCount = 0,
+        pushConstantRangeCount = 1, pPushConstantRanges = [pushConstantInfo,],
         setLayoutCount = 0
     )
 

@@ -3,7 +3,6 @@ import instance
 import logging
 import device
 import swapchain
-import frame
 import pipeline
 import framebuffer
 import commands
@@ -127,7 +126,7 @@ class Engine:
             frame.imageAvailable = sync.make_semaphore(self.device, self.debugMode)
             frame.renderFinished = sync.make_semaphore(self.device, self.debugMode)
 
-    def record_draw_commands(self, commandBuffer, imageIndex):
+    def record_draw_commands(self, commandBuffer, imageIndex, scene):
 
         beginInfo = VkCommandBufferBeginInfo()
 
@@ -151,10 +150,21 @@ class Engine:
         
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self.pipeline)
         
-        vkCmdDraw(
-            commandBuffer = commandBuffer, vertexCount = 3, 
-            instanceCount = 1, firstVertex = 0, firstInstance = 0
-        )
+        for position in scene.triangle_positions:
+            
+            model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
+            #objData = ffi.cast("float *", model_transform.ctypes.data)
+            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
+            #objData = ffi.cast("float *", model_transform.__array_interface__["data"][0])
+            vkCmdPushConstants(
+                commandBuffer=commandBuffer, layout = self.pipelineLayout,
+                stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
+                size = 4 * 4 * 4, pValues = objData
+            )
+            vkCmdDraw(
+                commandBuffer = commandBuffer, vertexCount = 3, 
+                instanceCount = 1, firstVertex = 0, firstInstance = 0
+            )
         
         vkCmdEndRenderPass(commandBuffer)
         
@@ -164,7 +174,7 @@ class Engine:
             if self.debugMode:
                 print("Failed to end recording command buffer")
     
-    def render(self):
+    def render(self, scene):
 
         #grab instance procedures
         vkAcquireNextImageKHR = vkGetDeviceProcAddr(self.device, 'vkAcquireNextImageKHR')
@@ -185,7 +195,7 @@ class Engine:
 
         commandBuffer = self.swapchainFrames[self.frameNumber].commandbuffer
         vkResetCommandBuffer(commandBuffer = commandBuffer, flags = 0)
-        self.record_draw_commands(commandBuffer, imageIndex)
+        self.record_draw_commands(commandBuffer, imageIndex, scene)
 
         submitInfo = VkSubmitInfo(
             waitSemaphoreCount = 1, pWaitSemaphores = [self.swapchainFrames[self.frameNumber].imageAvailable,], 

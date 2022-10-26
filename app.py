@@ -1,5 +1,6 @@
 from config import *
 import engine
+import scene
 
 class App:
 
@@ -9,6 +10,8 @@ class App:
         self.build_glfw_window(width, height, debugMode)
 
         self.graphicsEngine = engine.Engine(width, height, self.window, debugMode)
+
+        self.scene = scene.Scene()
 
         self.lastTime = glfw.get_time()
         self.currentTime = glfw.get_time()
@@ -54,7 +57,7 @@ class App:
         while not glfw.window_should_close(self.window):
 
             glfw.poll_events()
-            self.graphicsEngine.render()
+            self.graphicsEngine.render(self.scene)
             self.calculate_framerate()
 
     def close(self):
