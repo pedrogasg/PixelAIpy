@@ -1,5 +1,49 @@
 from config import *
 
+def supported(extensions, layers, debug):
+
+    """
+        ExtensionProperties( std::array<char, VK_MAX_EXTENSION_NAME_SIZE> const & extensionName_ = {},
+                           uint32_t                                             specVersion_ = {} )
+    """
+        
+    #check extension support
+    supportedExtensions = [extension.extensionName for extension in vkEnumerateInstanceExtensionProperties(None)]
+
+    if debug:
+        print("Device can support the following extensions:")
+        for supportedExtension in supportedExtensions:
+            print(f"\t\"{supportedExtension}\"")
+    
+    for extension in extensions:
+        
+        if extension in supportedExtensions:
+            if debug:
+                print(f"Extension \"{extension}\" is supported!")
+        else:
+            if debug:
+                print(f"Extension \"{extension}\" is not supported!")
+            return False
+
+    #check layer support
+    supportedLayers = [layer.layerName for layer in vkEnumerateInstanceLayerProperties()]
+
+    if debug:
+        print("Device can support the following layers:")
+        for supportedLayer in supportedLayers:
+            print(f"\t\"{supportedLayer}\"")
+
+    for layer in layers:
+        if layer in supportedLayers:
+            if debug:
+                print(f"Layer \"{layer}\" is supported!")
+        else:
+            if debug:
+                print(f"Layer \"{layer}\" is not supported!")
+            return False
+
+    return True
+
 def make_instance(debug, applicationName):
     if debug:
         print("Making an instance...")
@@ -65,12 +109,20 @@ def make_instance(debug, applicationName):
         in order to interface with vulkan.
     """
     extensions = glfw.get_required_instance_extensions()
+    if debug:
+        extensions.append(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
 
     if debug:
         print(f"extensions to be requested:")
 
         for extensionName in extensions:
             print(f"\t\" {extensionName}\"")
+    
+    layers = []
+    if debug:
+        layers.append("VK_LAYER_KHRONOS_validation")
+
+    supported(extensions, layers, debug)
 
     """
         from _vulkan.py:
@@ -86,7 +138,7 @@ def make_instance(debug, applicationName):
     """
     createInfo = VkInstanceCreateInfo(
         pApplicationInfo = appInfo,
-        enabledLayerCount = 0, ppEnabledLayerNames = None,
+        enabledLayerCount = len(layers), ppEnabledLayerNames = layers,
         enabledExtensionCount = len(extensions), ppEnabledExtensionNames = extensions
     )
 

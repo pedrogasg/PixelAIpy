@@ -1,5 +1,6 @@
 from config import *
 import instance
+import logging
 
 class Engine:
 
@@ -19,6 +20,7 @@ class Engine:
         
         self.build_gflw_window()
         self.make_instance()
+        self.make_debug_messenger()
 
     def build_gflw_window(self):
 
@@ -42,11 +44,29 @@ class Engine:
     def make_instance(self):
 
         self.instance = instance.make_instance(self.debugMode, "ID tech 12")
+    
+    def make_debug_messenger(self):
+
+        if self.debugMode:
+            self.debugMessenger = logging.make_debug_messenger(self.instance)
 
     def close(self):
 
         if self.debugMode:
             print("Goodbye see you!\n")
+        
+        if self.debugMode:
+            #fetch destruction function
+            destructionFunction = vkGetInstanceProcAddr(self.instance, 'vkDestroyDebugReportCallbackEXT')
+
+            """
+                def vkDestroyDebugReportCallbackEXT(
+                    instance
+                    ,callback
+                    ,pAllocator
+                ,):
+            """
+            destructionFunction(self.instance, self.debugMessenger, None)
 
         """
             from _vulkan.py:
