@@ -48,12 +48,34 @@ class Engine:
 
         if self.debugMode:
             self.debugMessenger = logging.make_debug_messenger(self.instance)
+
+        c_style_surface = ffi.new("VkSurfaceKHR*")
+        if (
+            glfw.create_window_surface(
+                instance = self.instance, window = self.window, 
+                allocator = None, surface = c_style_surface
+            ) != VK_SUCCESS
+        ):
+            if self.debugMode:
+                print("Failed to abstract glfw's surface for vulkan")
+        elif self.debugMode:
+            print("Successfully abstracted glfw's surface for vulkan")
+        self.surface = c_style_surface[0]
     
     def make_device(self):
 
         self.physicalDevice = device.choose_physical_device(self.instance, self.debugMode)
-        self.device = device.create_logical_device(self.physicalDevice, self.debugMode)
-        self.graphicsQueue = device.get_queue(self.physicalDevice, self.device, self.debugMode)
+        self.device = device.create_logical_device(
+            physicalDevice = self.physicalDevice, instance = self.instance, 
+            surface = self.surface, debug = self.debugMode
+        )
+        queues = device.get_queues(
+            physicalDevice = self.physicalDevice, logicalDevice = self.device, 
+            instance = self.instance, surface = self.surface,
+            debug = self.debugMode
+        )
+        self.graphicsQueue = queues[0]
+        self.presentQueue = queues[1]
 
     def close(self):
 
@@ -64,6 +86,8 @@ class Engine:
             device = self.device, pAllocator = None
         )
         
+        destructionFunction = vkGetInstanceProcAddr(self.instance, "vkDestroySurfaceKHR")
+        destructionFunction(self.instance, self.surface, None)
         if self.debugMode:
             #fetch destruction function
             destructionFunction = vkGetInstanceProcAddr(self.instance, 'vkDestroyDebugReportCallbackEXT')
@@ -76,7 +100,6 @@ class Engine:
                 ,):
             """
             destructionFunction(self.instance, self.debugMessenger, None)
-
         """
             from _vulkan.py:
 

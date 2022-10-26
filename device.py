@@ -146,9 +146,11 @@ def choose_physical_device(instance, debug):
 
     return None
 
-def find_queue_families(device, debug):
+def find_queue_families(device, instance, surface, debug):
         
     indices = QueueFamilyIndices()
+
+    surfaceSupport = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceSurfaceSupportKHR")
 
     queueFamilies = vkGetPhysicalDeviceQueueFamilyProperties(device)
 
@@ -189,17 +191,22 @@ def find_queue_families(device, debug):
 
         if queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT:
             indices.graphicsFamily = i
+
+            if debug:
+                print(f"Queue Family {i} is suitable for graphics")
+        
+        if surfaceSupport(device, i, surface):
             indices.presentFamily = i
 
             if debug:
-                print(f"Queue Family {i} is suitable for graphics and presenting")
+                print(f"Queue Family {i} is suitable for presenting")
 
-            if indices.is_complete():
-                break
+        if indices.is_complete():
+            break
 
     return indices
 
-def create_logical_device(physicalDevice, debug):
+def create_logical_device(physicalDevice, instance, surface, debug):
 
     """
         Create an abstraction around the GPU
@@ -209,12 +216,20 @@ def create_logical_device(physicalDevice, debug):
         At time of creation, any required queues will also be created,
         so queue create info must be passed in
     """
-    indices = find_queue_families(physicalDevice, debug)
-    queueCreateInfo = VkDeviceQueueCreateInfo(
-        queueFamilyIndex = indices.graphicsFamily,
-        queueCount = 1,
-        pQueuePriorities = [1.0,]
-    )
+    indices = find_queue_families(physicalDevice, instance, surface, debug)
+    uniqueIndices = [indices.graphicsFamily,]
+    if indices.graphicsFamily != indices.presentFamily:
+        uniqueIndices.append(indices.presentFamily)
+    
+    queueCreateInfo = []
+    for queueFamilyIndex in uniqueIndices:
+        queueCreateInfo.append(
+            VkDeviceQueueCreateInfo(
+                queueFamilyIndex = queueFamilyIndex,
+                queueCount = 1,
+                pQueuePriorities = [1.0,]
+            )
+        )
 
     """
         Device features must be requested before the device is abstracted,
@@ -227,8 +242,8 @@ def create_logical_device(physicalDevice, debug):
         enabledLayers.append("VK_LAYER_KHRONOS_validation")
 
     createInfo = VkDeviceCreateInfo(
-        queueCreateInfoCount = 1,
-        pQueueCreateInfos = [queueCreateInfo,],
+        queueCreateInfoCount = len(queueCreateInfo),
+        pQueueCreateInfos = queueCreateInfo,
         enabledExtensionCount = 0,
         pEnabledFeatures = [deviceFeatures,],
         enabledLayerCount = len(enabledLayers),
@@ -239,11 +254,18 @@ def create_logical_device(physicalDevice, debug):
         physicalDevice = physicalDevice, pCreateInfo = [createInfo,], pAllocator = None
     )
 
-def get_queue(physicalDevice, logicalDevice, debug):
+def get_queues(physicalDevice, logicalDevice, instance, surface, debug):
 
-    indices = find_queue_families(physicalDevice, debug)
-    return vkGetDeviceQueue(
-        device = logicalDevice,
-        queueFamilyIndex = indices.graphicsFamily,
-        queueIndex = 0
-    )
+    indices = find_queue_families(physicalDevice, instance, surface, debug)
+    return [
+        vkGetDeviceQueue(
+            device = logicalDevice,
+            queueFamilyIndex = indices.graphicsFamily,
+            queueIndex = 0
+        ),
+        vkGetDeviceQueue(
+            device = logicalDevice,
+            queueFamilyIndex = indices.presentFamily,
+            queueIndex = 0
+        ),
+    ]
