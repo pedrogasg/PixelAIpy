@@ -7,9 +7,9 @@ class Scene:
 
         self.triangle_positions = []
 
-        x = -1.0
+        x = -.8
         while x < 1.0:
-            y = -1.0
+            y = -.8
             while y < 1.0:
                 self.triangle_positions.append(
                     np.array([x, y, 0], dtype = np.float32)

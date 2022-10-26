@@ -7,6 +7,7 @@ import pipeline
 import framebuffer
 import commands
 import sync
+import triangle_mesh
 
 class Engine:
 
@@ -25,6 +26,7 @@ class Engine:
         self.make_device()
         self.make_pipeline()
         self.finalize_setup()
+        self.make_assets()
     
     def make_instance(self):
 
@@ -175,6 +177,18 @@ class Engine:
 
         self.make_frame_sync_objects()
 
+    def make_assets(self):
+
+        self.triangle_mesh = triangle_mesh.TriangleMesh(self.device, self.physicalDevice)
+    
+    def prepare_scene(self, commandBuffer):
+
+        vkCmdBindVertexBuffers(
+            commandBuffer = commandBuffer, firstBinding = 0,
+            bindingCount = 1, pBuffers = (self.triangle_mesh.vertex_buffer.buffer,),
+            pOffsets = (0,)
+        )
+
     def record_draw_commands(self, commandBuffer, imageIndex, scene):
 
         beginInfo = VkCommandBufferBeginInfo()
@@ -197,6 +211,8 @@ class Engine:
         vkCmdBeginRenderPass(commandBuffer, renderpassInfo, VK_SUBPASS_CONTENTS_INLINE)
         
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self.pipeline)
+
+        self.prepare_scene(commandBuffer)
         
         for position in scene.triangle_positions:
             
@@ -311,6 +327,8 @@ class Engine:
         vkDestroyRenderPass(self.device, self.renderpass, None)
         
         self.cleanup_swapchain()
+
+        self.triangle_mesh.destroy()
         
         vkDestroyDevice(
             device = self.device, pAllocator = None

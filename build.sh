@@ -1,0 +1,7 @@
+#/bin/sh
+
+glslc shaders/shader.vert -o shaders/vert.spv
+
+glslc shaders/shader.frag -o shaders/frag.spv
+
+python3 main.py

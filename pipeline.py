@@ -1,6 +1,7 @@
 from config import *
 import shaders
 import logging
+import mesh
 
 class InputBundle:
 
@@ -83,10 +84,12 @@ def create_graphics_pipeline(inputBundle):
 
     #vertex input stage
     #At this stage, no vertex data is being fetched.
+    bindingDescription = mesh.get_pos_color_binding_description()
+    attributeDescriptions = mesh.get_pos_color_attribute_descriptions()
     vertexInputInfo = VkPipelineVertexInputStateCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-        vertexBindingDescriptionCount=0,
-        vertexAttributeDescriptionCount=0
+        vertexBindingDescriptionCount=1, pVertexBindingDescriptions= (bindingDescription,),
+        vertexAttributeDescriptionCount=2, pVertexAttributeDescriptions= attributeDescriptions
     )
 
     #vertex shader transforms vertices appropriately
