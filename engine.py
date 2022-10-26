@@ -229,7 +229,12 @@ class Engine:
         meshType = STAR
         self.meshes.consume(meshType, vertices)
 
-        self.meshes.finalize(self.device, self.physicalDevice)
+        finalization_chunk = vertex_menagerie.VertexBufferFinalizationChunk()
+        finalization_chunk.command_buffer = self.mainCommandbuffer
+        finalization_chunk.logical_device = self.device
+        finalization_chunk.physical_device = self.physicalDevice
+        finalization_chunk.queue = self.graphicsQueue
+        self.meshes.finalize(finalization_chunk)
     
     def prepare_scene(self, commandBuffer):
 

@@ -12,6 +12,7 @@ class BufferInput:
         self.usage = None
         self.logical_device = None
         self.physical_device = None
+        self.memory_properties = None
 
 class Buffer:
 
@@ -110,9 +111,10 @@ def allocate_buffer_memory(buffer: Buffer, input_chunk: BufferInput):
     allocInfo = VkMemoryAllocateInfo(
         allocationSize = memory_requirements.size,
         memoryTypeIndex = find_memory_type_index(
-            input_chunk.physical_device, memory_requirements.memoryTypeBits, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            )
+            physical_device = input_chunk.physical_device, 
+            supported_memory_indices = memory_requirements.memoryTypeBits, 
+            requested_properties = input_chunk.memory_properties
+        )
     )
 
     buffer.buffer_memory = vkAllocateMemory(
@@ -124,3 +126,39 @@ def allocate_buffer_memory(buffer: Buffer, input_chunk: BufferInput):
         device = input_chunk.logical_device, buffer = buffer.buffer, 
         memory = buffer.buffer_memory, memoryOffset = 0
     )
+
+def copy_buffer(src_buffer, dst_buffer, size, queue, command_buffer):
+
+    vkResetCommandBuffer(
+        commandBuffer = command_buffer,
+        flags = 0
+    )
+
+    beginInfo = VkCommandBufferBeginInfo(
+        flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+    )
+    vkBeginCommandBuffer(
+        commandBuffer = command_buffer, pBeginInfo = beginInfo
+    )
+
+    copyRegion = VkBufferCopy(
+        srcOffset = 0, dstOffset = 0,
+        size = size
+    )
+    vkCmdCopyBuffer(
+        commandBuffer = command_buffer,
+        srcBuffer = src_buffer.buffer, dstBuffer = dst_buffer.buffer,
+        regionCount = 1, pRegions = [copyRegion,]
+    )
+
+    vkEndCommandBuffer(commandBuffer = command_buffer)
+
+    submitInfo = VkSubmitInfo(
+        commandBufferCount = 1, pCommandBuffers = [command_buffer,]
+    )
+    vkQueueSubmit(
+        queue = queue, submitCount = 1, pSubmits = [submitInfo,],
+        fence = None
+    )
+
+    vkQueueWaitIdle(queue = queue)
