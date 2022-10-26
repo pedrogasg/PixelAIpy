@@ -1,27 +1,5 @@
-import glfw
-import glfw.GLFW as GLFW_CONSTANTS
-
-#statically load vulkan library
-from vulkan import *
-
-"""
- Statically linking the prebuilt header from the lunarg sdk will load
- most functions, but not all.
- 
- Functions can also be dynamically loaded, using the call
- 
- PFN_vkVoidFunction vkGetInstanceProcAddr(
-    VkInstance                                  instance,
-    string                                      pName);
-
- or
-
- PFN_vkVoidFunction vkGetDeviceProcAddr(
-	VkDevice                                    device,
-	string                                      pName);
-
-	We will look at this later, once we've created an instance and device.
-"""
+from config import *
+import instance
 
 class Engine:
 
@@ -40,6 +18,7 @@ class Engine:
             print("Making a graphics engine")
         
         self.build_gflw_window()
+        self.make_instance()
 
     def build_gflw_window(self):
 
@@ -59,11 +38,25 @@ class Engine:
         else:
             if self.debugMode:
                 print("GLFW window creation failed\n")
+    
+    def make_instance(self):
+
+        self.instance = instance.make_instance(self.debugMode, "ID tech 12")
 
     def close(self):
 
         if self.debugMode:
             print("Goodbye see you!\n")
+
+        """
+            from _vulkan.py:
+
+            def vkDestroyInstance(
+                instance,
+                pAllocator,
+            )
+        """
+        vkDestroyInstance(self.instance, None)
 
 	    #terminate glfw
         glfw.terminate()
