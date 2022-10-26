@@ -1,3 +1,4 @@
+import queue
 from config import *
 
 """
@@ -197,3 +198,52 @@ def find_queue_families(device, debug):
                 break
 
     return indices
+
+def create_logical_device(physicalDevice, debug):
+
+    """
+        Create an abstraction around the GPU
+    """
+
+    """
+        At time of creation, any required queues will also be created,
+        so queue create info must be passed in
+    """
+    indices = find_queue_families(physicalDevice, debug)
+    queueCreateInfo = VkDeviceQueueCreateInfo(
+        queueFamilyIndex = indices.graphicsFamily,
+        queueCount = 1,
+        pQueuePriorities = [1.0,]
+    )
+
+    """
+        Device features must be requested before the device is abstracted,
+        therefore we only pay for what we use
+    """
+    deviceFeatures = VkPhysicalDeviceFeatures()
+
+    enabledLayers = []
+    if debug:
+        enabledLayers.append("VK_LAYER_KHRONOS_validation")
+
+    createInfo = VkDeviceCreateInfo(
+        queueCreateInfoCount = 1,
+        pQueueCreateInfos = [queueCreateInfo,],
+        enabledExtensionCount = 0,
+        pEnabledFeatures = [deviceFeatures,],
+        enabledLayerCount = len(enabledLayers),
+        ppEnabledLayerNames = enabledLayers
+    )
+
+    return vkCreateDevice(
+        physicalDevice = physicalDevice, pCreateInfo = [createInfo,], pAllocator = None
+    )
+
+def get_queue(physicalDevice, logicalDevice, debug):
+
+    indices = find_queue_families(physicalDevice, debug)
+    return vkGetDeviceQueue(
+        device = logicalDevice,
+        queueFamilyIndex = indices.graphicsFamily,
+        queueIndex = 0
+    )
