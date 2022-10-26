@@ -1,5 +1,5 @@
-import queue
 from config import *
+import logging
 
 """
     Vulkan separates the concept of physical and logical devices. 
@@ -24,45 +24,24 @@ class QueueFamilyIndices:
 
         return not(self.graphicsFamily is None or self.presentFamily is None)
 
-def log_device_properties(device):
-    
-    """
-        void vkGetPhysicalDeviceProperties(
-            VkPhysicalDevice                            physicalDevice,
-            VkPhysicalDeviceProperties*                 pProperties);
+class SwapChainSupportDetails:
 
-    """
 
-    properties = vkGetPhysicalDeviceProperties(device)
+    def __init__(self):
+        
+        self.capabilities = None
+        self.formats = None
+        self.presentModes = None
 
-    """
-        typedef struct VkPhysicalDeviceProperties {
-            uint32_t                            apiVersion;
-            uint32_t                            driverVersion;
-            uint32_t                            vendorID;
-            uint32_t                            deviceID;
-            VkPhysicalDeviceType                deviceType;
-            char                                deviceName[VK_MAX_PHYSICAL_DEVICE_NAME_SIZE];
-            uint8_t                             pipelineCacheUUID[VK_UUID_SIZE];
-            VkPhysicalDeviceLimits              limits;
-            VkPhysicalDeviceSparseProperties    sparseProperties;
-            } VkPhysicalDeviceProperties;
-    """
+class SwapChainBundle:
 
-    print(f"Device name: {properties.deviceName}")
 
-    print("Device type: ",end="")
-
-    if properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU:
-        print("CPU")
-    elif properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-        print("Discrete GPU")
-    elif properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-        print("Integrated GPU")
-    elif properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-        print("Virtual GPU")
-    else:
-        print("Other")
+    def __init__(self):
+        
+        self.swapchain = None
+        self.images = None
+        self.format = None
+        self.extent = None
 
 def check_device_extension_support(device, requestedExtensions, debug):
 
@@ -140,7 +119,7 @@ def choose_physical_device(instance, debug):
     # check if a suitable device can be found
     for device in availableDevices:
         if debug:
-            log_device_properties(device)
+            logging.log_device_properties(device)
         if is_suitable(device, debug):
             return device
 
@@ -240,11 +219,16 @@ def create_logical_device(physicalDevice, instance, surface, debug):
     enabledLayers = []
     if debug:
         enabledLayers.append("VK_LAYER_KHRONOS_validation")
+    
+    deviceExtensions = [
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    ]
 
     createInfo = VkDeviceCreateInfo(
         queueCreateInfoCount = len(queueCreateInfo),
         pQueueCreateInfos = queueCreateInfo,
-        enabledExtensionCount = 0,
+        enabledExtensionCount = len(deviceExtensions),
+        ppEnabledExtensionNames = deviceExtensions,
         pEnabledFeatures = [deviceFeatures,],
         enabledLayerCount = len(enabledLayers),
         ppEnabledLayerNames = enabledLayers
@@ -269,3 +253,197 @@ def get_queues(physicalDevice, logicalDevice, instance, surface, debug):
             queueIndex = 0
         ),
     ]
+
+def query_swapchain_support(instance, physicalDevice, surface, debug):
+
+    """
+    typedef struct VkSurfaceCapabilitiesKHR {
+        uint32_t                         minImageCount;
+        uint32_t                         maxImageCount;
+        VkExtent2D                       currentExtent;
+        VkExtent2D                       minImageExtent;
+        VkExtent2D                       maxImageExtent;
+        uint32_t                         maxImageArrayLayers;
+        VkSurfaceTransformFlagsKHR       supportedTransforms;
+        VkSurfaceTransformFlagBitsKHR    currentTransform;
+        VkCompositeAlphaFlagsKHR         supportedCompositeAlpha;
+        VkImageUsageFlags                supportedUsageFlags;
+    } VkSurfaceCapabilitiesKHR;
+    """
+    
+    support = SwapChainSupportDetails()
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR = vkGetInstanceProcAddr(instance, 'vkGetPhysicalDeviceSurfaceCapabilitiesKHR')
+    support.capabilities = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface)
+    
+    if debug:
+            
+        print("Swapchain can support the following surface capabilities:")
+
+        print(f"\tminimum image count: {support.capabilities.minImageCount}")
+        print(f"\tmaximum image count: {support.capabilities.maxImageCount}")
+
+        print("\tcurrent extent:")
+        """
+        typedef struct VkExtent2D {
+            uint32_t    width;
+            uint32_t    height;
+        } VkExtent2D;
+        """
+        print(f"\t\twidth: {support.capabilities.currentExtent.width}")
+        print(f"\t\theight: {support.capabilities.currentExtent.height}")
+
+        print("\tminimum supported extent:")
+        print(f"\t\twidth: {support.capabilities.minImageExtent.width}")
+        print(f"\t\theight: {support.capabilities.minImageExtent.height}")
+
+        print("\tmaximum supported extent:")
+        print(f"\t\twidth: {support.capabilities.maxImageExtent.width}")
+        print(f"\t\theight: {support.capabilities.maxImageExtent.height}")
+
+        print(f"\tmaximum image array layers: {support.capabilities.maxImageArrayLayers}")
+
+            
+        print("\tsupported transforms:")
+        stringList = logging.log_transform_bits(support.capabilities.supportedTransforms)
+        for line in stringList:
+            print(f"\t\t{line}")
+
+        print("\tcurrent transform:")
+        stringList = logging.log_transform_bits(support.capabilities.currentTransform)
+        for line in stringList:
+            print(f"\t\t{line}")
+
+        print("\tsupported alpha operations:")
+        stringList = logging.log_alpha_composite_bits(support.capabilities.supportedCompositeAlpha)
+        for line in stringList:
+            print(f"\t\t{line}")
+
+        print("\tsupported image usage:")
+        stringList = logging.log_image_usage_bits(support.capabilities.supportedUsageFlags)
+        for line in stringList:
+            print(f"\t\t{line}")
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(instance, 'vkGetPhysicalDeviceSurfaceFormatsKHR')
+    support.formats = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
+
+    if debug:
+
+        for supportedFormat in support.formats:
+            """
+            * typedef struct VkSurfaceFormatKHR {
+                VkFormat           format;
+                VkColorSpaceKHR    colorSpace;
+            } VkSurfaceFormatKHR;
+            """
+
+            print(f"supported pixel format: {logging.format_to_string(supportedFormat.format)}")
+            print(f"supported color space: {logging.colorspace_to_string(supportedFormat.colorSpace)}")
+
+    vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(instance, 'vkGetPhysicalDeviceSurfacePresentModesKHR')
+    support.presentModes = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
+
+    for presentMode in support.presentModes:
+        print(f"\t{logging.log_present_mode(presentMode)}")
+
+    return support
+
+def choose_swapchain_surface_format(formats):
+
+    for format in formats:
+        if (format.format == VK_FORMAT_B8G8R8A8_UNORM
+            and format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR):
+            return format
+
+    return formats[0]
+
+def choose_swapchain_present_mode(presentModes):
+        
+    for presentMode in presentModes:
+        if presentMode == VK_PRESENT_MODE_MAILBOX_KHR:
+            return presentMode
+
+    return VK_PRESENT_MODE_FIFO_KHR
+
+def choose_swapchain_extent(width, height, capabilities):
+    
+    extent = VkExtent2D(width, height)
+
+    extent.width = min(
+        capabilities.maxImageExtent.width, 
+        max(capabilities.minImageExtent.width, extent.width)
+    )
+
+    extent.height = min(
+        capabilities.maxImageExtent.height,
+        max(capabilities.minImageExtent.height, extent.height)
+    )
+
+    return extent
+
+def create_swapchain(instance, logicalDevice, physicalDevice, surface, width, height, debug):
+
+    support = query_swapchain_support(instance, physicalDevice, surface, debug)
+
+    format = choose_swapchain_surface_format(support.formats)
+
+    presentMode = choose_swapchain_present_mode(support.presentModes)
+
+    extent = choose_swapchain_extent(width, height, support.capabilities)
+
+    imageCount = support.capabilities.minImageCount + 1
+
+    """
+        * VULKAN_HPP_CONSTEXPR SwapchainCreateInfoKHR(
+            VULKAN_HPP_NAMESPACE::SwapchainCreateFlagsKHR flags_         = {},
+            VULKAN_HPP_NAMESPACE::SurfaceKHR              surface_       = {},
+            uint32_t                                      minImageCount_ = {},
+            VULKAN_HPP_NAMESPACE::Format                  imageFormat_   = VULKAN_HPP_NAMESPACE::Format::eUndefined,
+            VULKAN_HPP_NAMESPACE::ColorSpaceKHR   imageColorSpace_  = VULKAN_HPP_NAMESPACE::ColorSpaceKHR::eSrgbNonlinear,
+            VULKAN_HPP_NAMESPACE::Extent2D        imageExtent_      = {},
+            uint32_t                              imageArrayLayers_ = {},
+            VULKAN_HPP_NAMESPACE::ImageUsageFlags imageUsage_       = {},
+            VULKAN_HPP_NAMESPACE::SharingMode     imageSharingMode_ = VULKAN_HPP_NAMESPACE::SharingMode::eExclusive,
+            uint32_t                              queueFamilyIndexCount_ = {},
+            const uint32_t *                      pQueueFamilyIndices_   = {},
+            VULKAN_HPP_NAMESPACE::SurfaceTransformFlagBitsKHR preTransform_ =
+            VULKAN_HPP_NAMESPACE::SurfaceTransformFlagBitsKHR::eIdentity,
+            VULKAN_HPP_NAMESPACE::CompositeAlphaFlagBitsKHR compositeAlpha_ =
+            VULKAN_HPP_NAMESPACE::CompositeAlphaFlagBitsKHR::eOpaque,
+            VULKAN_HPP_NAMESPACE::PresentModeKHR presentMode_  = VULKAN_HPP_NAMESPACE::PresentModeKHR::eImmediate,
+            VULKAN_HPP_NAMESPACE::Bool32         clipped_      = {},
+            VULKAN_HPP_NAMESPACE::SwapchainKHR   oldSwapchain_ = {} 
+        ) VULKAN_HPP_NOEXCEPT
+    """
+
+    indices = find_queue_families(physicalDevice, instance, surface, debug)
+    queueFamilyIndices = [
+        indices.graphicsFamily, indices.presentFamily
+    ]
+    if (indices.graphicsFamily != indices.presentFamily):
+        imageSharingMode = VK_SHARING_MODE_CONCURRENT
+        queueFamilyIndexCount = 2
+        pQueueFamilyIndices = queueFamilyIndices
+    else:
+        imageSharingMode = VK_SHARING_MODE_EXCLUSIVE
+        queueFamilyIndexCount = 0
+        pQueueFamilyIndices = None
+
+    createInfo = VkSwapchainCreateInfoKHR(
+        surface = surface, minImageCount = imageCount, imageFormat = format.format,
+        imageColorSpace = format.colorSpace, imageExtent = extent, imageArrayLayers = 1,
+        imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, imageSharingMode = imageSharingMode,
+        queueFamilyIndexCount = queueFamilyIndexCount, pQueueFamilyIndices = pQueueFamilyIndices,
+        preTransform = support.capabilities.currentTransform, compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        presentMode = presentMode, clipped = VK_TRUE
+    )
+
+    bundle = SwapChainBundle()
+
+    vkCreateSwapchainKHR = vkGetDeviceProcAddr(logicalDevice, 'vkCreateSwapchainKHR')
+    bundle.swapchain = vkCreateSwapchainKHR(logicalDevice, createInfo, None)
+    vkGetSwapchainImagesKHR = vkGetDeviceProcAddr(logicalDevice, 'vkGetSwapchainImagesKHR')
+    bundle.images = vkGetSwapchainImagesKHR(logicalDevice, bundle.swapchain)
+    bundle.format = format.format
+    bundle.extent = extent
+
+    return bundle
