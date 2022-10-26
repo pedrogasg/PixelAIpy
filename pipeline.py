@@ -1,5 +1,6 @@
 from config import *
 import shaders
+import logging
 
 class InputBundle:
 
@@ -78,7 +79,7 @@ def create_pipeline_layout(device):
         device = device, pCreateInfo = pipelineLayoutInfo, pAllocator = None
     )
 
-def create_graphics_pipeline(inputBundle, debug):
+def create_graphics_pipeline(inputBundle):
 
     #vertex input stage
     #At this stage, no vertex data is being fetched.
@@ -89,8 +90,7 @@ def create_graphics_pipeline(inputBundle, debug):
     )
 
     #vertex shader transforms vertices appropriately
-    if (debug):
-        print(f"Load shader module: {inputBundle.vertexFilepath}")
+    logging.logger.print(f"Load shader module: {inputBundle.vertexFilepath}")
     vertexShaderModule = shaders.create_shader_module(inputBundle.device, inputBundle.vertexFilepath)
     vertexShaderStageInfo = VkPipelineShaderStageCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -153,8 +153,7 @@ def create_graphics_pipeline(inputBundle, debug):
 
     #fragment shader takes fragments from the rasterizer and colours them
     #appropriately
-    if (debug):
-        print(f"Load shader module: {inputBundle.fragmentFilepath}")
+    logging.logger.print(f"Load shader module: {inputBundle.fragmentFilepath}")
     fragmentShaderModule = shaders.create_shader_module(inputBundle.device, inputBundle.fragmentFilepath)
     fragmentShaderStageInfo = VkPipelineShaderStageCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,

@@ -1,15 +1,18 @@
 from config import *
 import engine
 import scene
+import logging
 
 class App:
 
 
     def __init__(self, width, height, debugMode):
 
-        self.build_glfw_window(width, height, debugMode)
+        logging.logger.set_debug_mode(debugMode)
 
-        self.graphicsEngine = engine.Engine(width, height, self.window, debugMode)
+        self.build_glfw_window(width, height)
+
+        self.graphicsEngine = engine.Engine(width, height, self.window)
 
         self.scene = scene.Scene()
 
@@ -18,7 +21,7 @@ class App:
         self.numFrames = 0
         self.frameTime = 0
 
-    def build_glfw_window(self, width, height, debugMode):
+    def build_glfw_window(self, width, height):
 
         #initialize glfw
         glfw.init()
@@ -26,16 +29,16 @@ class App:
         #no default rendering client, we'll hook vulkan up to the window later
         glfw.window_hint(GLFW_CONSTANTS.GLFW_CLIENT_API, GLFW_CONSTANTS.GLFW_NO_API)
         #resizing breaks the swapchain, we'll disable it for now
-        glfw.window_hint(GLFW_CONSTANTS.GLFW_RESIZABLE, GLFW_CONSTANTS.GLFW_FALSE)
+        glfw.window_hint(GLFW_CONSTANTS.GLFW_RESIZABLE, GLFW_CONSTANTS.GLFW_TRUE)
         
         #create_window(int width, int height, const char *title, GLFWmonitor *monitor, GLFWwindow *share)
         self.window = glfw.create_window(width, height, "ID Tech 12", None, None)
         if self.window is not None:
-            if debugMode:
-                print(f"Successfully made a glfw window called \"ID Tech 12\", width: {width}, height: {height}\n")
+            logging.logger.print(
+                f"Successfully made a glfw window called \"ID Tech 12\", width: {width}, height: {height}"
+            )
         else:
-            if debugMode:
-                print("GLFW window creation failed\n")
+            logging.logger.print("GLFW window creation failed")
     
     def calculate_framerate(self):
 

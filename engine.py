@@ -11,11 +11,7 @@ import sync
 class Engine:
 
     
-    def __init__(self, width, height, window, debug):
-
-        
-        #whether to print debug messages in functions
-        self.debugMode = debug
+    def __init__(self, width, height, window):
 
         #glfw window parameters
         self.width = width
@@ -23,8 +19,7 @@ class Engine:
 
         self.window = window
 
-        if self.debugMode:
-            print("Making a graphics engine")
+        logging.logger.print("Making a graphics engine")
         
         self.make_instance()
         self.make_device()
@@ -33,9 +28,9 @@ class Engine:
     
     def make_instance(self):
 
-        self.instance = instance.make_instance(self.debugMode, "ID tech 12")
+        self.instance = instance.make_instance("ID tech 12")
 
-        if self.debugMode:
+        if logging.logger.debug_mode:
             self.debugMessenger = logging.make_debug_messenger(self.instance)
 
         c_style_surface = ffi.new("VkSurfaceKHR*")
@@ -45,30 +40,38 @@ class Engine:
                 allocator = None, surface = c_style_surface
             ) != VK_SUCCESS
         ):
-            if self.debugMode:
-                print("Failed to abstract glfw's surface for vulkan")
-        elif self.debugMode:
-            print("Successfully abstracted glfw's surface for vulkan")
+            logging.logger.print("Failed to abstract glfw's surface for vulkan")
+        else:
+            logging.logger.print("Successfully abstracted glfw's surface for vulkan")
         self.surface = c_style_surface[0]
     
     def make_device(self):
 
-        self.physicalDevice = device.choose_physical_device(self.instance, self.debugMode)
+        self.physicalDevice = device.choose_physical_device(self.instance)
         self.device = device.create_logical_device(
             physicalDevice = self.physicalDevice, instance = self.instance, 
-            surface = self.surface, debug = self.debugMode
+            surface = self.surface
         )
         queues = device.get_queues(
             physicalDevice = self.physicalDevice, logicalDevice = self.device, 
             instance = self.instance, surface = self.surface,
-            debug = self.debugMode
         )
         self.graphicsQueue = queues[0]
         self.presentQueue = queues[1]
         
+        self.make_swapchain()
+
+        self.frameNumber = 0
+    
+    def make_swapchain(self):
+        """
+            Makes the engine's swapchain, note that this will make images
+            and image views, it won't make frames ready for rendering.
+        """
+
         bundle = swapchain.create_swapchain(
             self.instance, self.device, self.physicalDevice, self.surface,
-            self.width, self.height, self.debugMode
+            self.width, self.height
         )
 
         self.swapchain = bundle.swapchain
@@ -76,7 +79,25 @@ class Engine:
         self.swapchainFormat = bundle.format
         self.swapchainExtent = bundle.extent
         self.maxFramesInFlight = len(self.swapchainFrames)
-        self.frameNumber = 0
+    
+    def recreate_swapchain(self):
+        """
+            Destroy the current swapchain, then rebuild a new one
+        """
+
+        self.width = 0
+        self.height = 0
+        while (self.width == 0 or self.height == 0):
+            self.width, self.height = glfw.get_window_size(self.window)
+            glfw.wait_events()
+
+        vkDeviceWaitIdle(self.device)
+        self.cleanup_swapchain()
+
+        self.make_swapchain()
+        self.make_framebuffers()
+        self.make_frame_command_buffers()
+        self.make_frame_sync_objects()
 
     def make_pipeline(self):
 
@@ -88,21 +109,51 @@ class Engine:
             fragmentFilepath = "shaders/frag.spv"
         )
 
-        outputBundle = pipeline.create_graphics_pipeline(inputBundle, self.debugMode)
+        outputBundle = pipeline.create_graphics_pipeline(inputBundle)
 
         self.pipelineLayout = outputBundle.pipelineLayout
         self.renderpass = outputBundle.renderPass
         self.pipeline = outputBundle.pipeline
     
-    def finalize_setup(self):
+    def make_framebuffers(self):
+        """
+            Makes a framebuffer for each frame on the swapchain.
+        """
 
         framebufferInput = framebuffer.framebufferInput()
         framebufferInput.device = self.device
         framebufferInput.renderpass = self.renderpass
         framebufferInput.swapchainExtent = self.swapchainExtent
         framebuffer.make_framebuffers(
-            framebufferInput, self.swapchainFrames, self.debugMode
+            framebufferInput, self.swapchainFrames
         )
+    
+    def make_frame_command_buffers(self):
+        """
+            Make a command buffer for each frame on the swapchain.
+        """
+
+        commandbufferInput = commands.commandbufferInputChunk()
+        commandbufferInput.device = self.device
+        commandbufferInput.commandPool = self.commandPool
+        commandbufferInput.frames = self.swapchainFrames
+        commands.make_frame_command_buffers(
+            commandbufferInput
+        )
+    
+    def make_frame_sync_objects(self):
+        """
+            Make the semaphores and fences needed to render each frame.
+        """
+
+        for frame in self.swapchainFrames:
+            frame.inFlight = sync.make_fence(self.device)
+            frame.imageAvailable = sync.make_semaphore(self.device)
+            frame.renderFinished = sync.make_semaphore(self.device)
+
+    def finalize_setup(self):
+
+        self.make_framebuffers()
 
         commandPoolInput = commands.commandPoolInputChunk()
         commandPoolInput.device = self.device
@@ -110,21 +161,19 @@ class Engine:
         commandPoolInput.surface = self.surface
         commandPoolInput.instance = self.instance
         self.commandPool = commands.make_command_pool(
-            commandPoolInput, self.debugMode
+            commandPoolInput
         )
 
         commandbufferInput = commands.commandbufferInputChunk()
         commandbufferInput.device = self.device
         commandbufferInput.commandPool = self.commandPool
         commandbufferInput.frames = self.swapchainFrames
-        self.mainCommandbuffer = commands.make_command_buffers(
-            commandbufferInput, self.debugMode
+        self.mainCommandbuffer = commands.make_command_buffer(
+            commandbufferInput
         )
+        commands.make_frame_command_buffers(commandbufferInput)
 
-        for frame in self.swapchainFrames:
-            frame.inFlight = sync.make_fence(self.device, self.debugMode)
-            frame.imageAvailable = sync.make_semaphore(self.device, self.debugMode)
-            frame.renderFinished = sync.make_semaphore(self.device, self.debugMode)
+        self.make_frame_sync_objects()
 
     def record_draw_commands(self, commandBuffer, imageIndex, scene):
 
@@ -133,8 +182,7 @@ class Engine:
         try:
             vkBeginCommandBuffer(commandBuffer, beginInfo)
         except:
-            if self.debugMode:
-                print("Failed to begin recording command buffer")
+            logging.logger.print("Failed to begin recording command buffer")
         
         renderpassInfo = VkRenderPassBeginInfo(
             renderPass = self.renderpass,
@@ -171,8 +219,7 @@ class Engine:
         try:
             vkEndCommandBuffer(commandBuffer)
         except:
-            if self.debugMode:
-                print("Failed to end recording command buffer")
+            logging.logger.print("Failed to end recording command buffer")
     
     def render(self, scene):
 
@@ -187,11 +234,16 @@ class Engine:
         vkResetFences(
             device = self.device, fenceCount = 1, pFences = [self.swapchainFrames[self.frameNumber].inFlight,]
         )
-
-        imageIndex = vkAcquireNextImageKHR(
-            device = self.device, swapchain = self.swapchain, timeout = 1000000000, 
-            semaphore = self.swapchainFrames[self.frameNumber].imageAvailable, fence = VK_NULL_HANDLE
-        )
+        
+        try:
+            imageIndex = vkAcquireNextImageKHR(
+                device = self.device, swapchain = self.swapchain, timeout = 1000000000, 
+                semaphore = self.swapchainFrames[self.frameNumber].imageAvailable, fence = VK_NULL_HANDLE
+            )
+        except:
+            logging.logger.print("recreate swapchain")
+            self.recreate_swapchain()
+            return
 
         commandBuffer = self.swapchainFrames[self.frameNumber].commandbuffer
         vkResetCommandBuffer(commandBuffer = commandBuffer, flags = 0)
@@ -203,38 +255,35 @@ class Engine:
             commandBufferCount = 1, pCommandBuffers = [commandBuffer,], signalSemaphoreCount = 1,
             pSignalSemaphores = [self.swapchainFrames[self.frameNumber].renderFinished,]
         )
-
+        
         try:
             vkQueueSubmit(
                 queue = self.graphicsQueue, submitCount = 1, 
                 pSubmits = submitInfo, fence = self.swapchainFrames[self.frameNumber].inFlight
             )
         except:
-            if self.debugMode:
-                print("Failed to submit draw commands")
+            logging.logger.print("Failed to submit draw commands")
         
         presentInfo = VkPresentInfoKHR(
             waitSemaphoreCount = 1, pWaitSemaphores = [self.swapchainFrames[self.frameNumber].renderFinished,],
             swapchainCount = 1, pSwapchains = [self.swapchain,],
             pImageIndices = [imageIndex,]
         )
-        vkQueuePresentKHR(self.presentQueue, presentInfo)
+
+        try:
+            vkQueuePresentKHR(self.presentQueue, presentInfo)
+        except:
+            logging.logger.print("recreate swapchain")
+            self.recreate_swapchain()
+            return
 
         self.frameNumber = (self.frameNumber + 1) % self.maxFramesInFlight
+    
+    def cleanup_swapchain(self):
+        """
+            Free the memory allocated for each frame, and destroy the swapchain.
+        """
 
-    def close(self):
-
-        vkDeviceWaitIdle(self.device)
-
-        if self.debugMode:
-            print("Goodbye see you!\n")
-
-        vkDestroyCommandPool(self.device, self.commandPool, None)
-
-        vkDestroyPipeline(self.device, self.pipeline, None)
-        vkDestroyPipelineLayout(self.device, self.pipelineLayout, None)
-        vkDestroyRenderPass(self.device, self.renderpass, None)
-        
         for frame in self.swapchainFrames:
             vkDestroyImageView(
                 device = self.device, imageView = frame.image_view, pAllocator = None
@@ -248,13 +297,28 @@ class Engine:
         
         destructionFunction = vkGetDeviceProcAddr(self.device, 'vkDestroySwapchainKHR')
         destructionFunction(self.device, self.swapchain, None)
+
+    def close(self):
+
+        vkDeviceWaitIdle(self.device)
+
+        logging.logger.print("Goodbye see you!\n")
+
+        vkDestroyCommandPool(self.device, self.commandPool, None)
+
+        vkDestroyPipeline(self.device, self.pipeline, None)
+        vkDestroyPipelineLayout(self.device, self.pipelineLayout, None)
+        vkDestroyRenderPass(self.device, self.renderpass, None)
+        
+        self.cleanup_swapchain()
+        
         vkDestroyDevice(
             device = self.device, pAllocator = None
         )
         
         destructionFunction = vkGetInstanceProcAddr(self.instance, "vkDestroySurfaceKHR")
         destructionFunction(self.instance, self.surface, None)
-        if self.debugMode:
+        if logging.logger.debug_mode:
             #fetch destruction function
             destructionFunction = vkGetInstanceProcAddr(self.instance, 'vkDestroyDebugReportCallbackEXT')
 

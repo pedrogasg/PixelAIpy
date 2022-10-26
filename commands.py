@@ -1,6 +1,6 @@
 from config import *
 import queue_families
-import frame
+import logging
 
 class commandPoolInputChunk:
 
@@ -21,13 +21,12 @@ class commandbufferInputChunk:
         self.commandPool = None
         self.frames = None
 
-def make_command_pool(inputChunk, debug):
+def make_command_pool(inputChunk):
 
     queueFamilyIndices = queue_families.find_queue_families(
         device = inputChunk.physicalDevice,
         instance = inputChunk.instance,
         surface = inputChunk.surface,
-        debug = debug
     )
 
     poolInfo = VkCommandPoolCreateInfo(
@@ -39,18 +38,21 @@ def make_command_pool(inputChunk, debug):
         commandPool = vkCreateCommandPool(
             inputChunk.device, poolInfo, None
         )
-
-        if debug:
-            print(f"Created command pool")
-        
+        logging.logger.print("Created command pool")
         return commandPool
     except:
-        if debug:
-            print(f"Failed to create command pool")
-        
+
+        logging.logger.print("Failed to create command pool")
         return None
 
-def make_command_buffers(inputChunk, debug):
+def make_frame_command_buffers(inputChunk: commandbufferInputChunk) -> None:
+    """
+        Make command buffers for each frame.
+
+        Parameters:
+            inputChunk (commandBufferInputChunk): holds the various objects
+                                                    needed.
+    """
 
     allocInfo = VkCommandBufferAllocateInfo(
         commandPool = inputChunk.commandPool,
@@ -64,21 +66,33 @@ def make_command_buffers(inputChunk, debug):
         try:
             frame.commandbuffer = vkAllocateCommandBuffers(inputChunk.device, allocInfo)[0]
 
-            if debug:
-                print(f"Allocated command buffer for frame {i}")
+            logging.logger.print(f"Allocated command buffer for frame {i}")
         except:
-            if debug:
-                print(f"Failed to allocate command buffer for frame {i}")
+            logging.logger.print(f"Failed to allocate command buffer for frame {i}")
+
+def make_command_buffer(inputChunk):
+
+    """
+        Make a single command buffer for each frame.
+
+        Parameters:
+            inputChunk (commandBufferInputChunk): holds the various objects
+                                                    needed.
+    """
+
+    allocInfo = VkCommandBufferAllocateInfo(
+        commandPool = inputChunk.commandPool,
+        level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        commandBufferCount = 1
+    )
     
     try:
         commandbuffer = vkAllocateCommandBuffers(inputChunk.device, allocInfo)[0]
 
-        if debug:
-            print(f"Allocated main command buffer")
+        logging.logger.print("Allocated main command buffer")
         
         return commandbuffer
     except:
-        if debug:
-            print(f"Failed to allocate main command buffer")
+        logging.logger.print("Failed to allocate main command buffer")
         
         return None

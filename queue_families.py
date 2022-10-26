@@ -1,4 +1,5 @@
 from config import *
+import logging
 
 class QueueFamilyIndices:
 
@@ -12,7 +13,7 @@ class QueueFamilyIndices:
 
         return not(self.graphicsFamily is None or self.presentFamily is None)
     
-def find_queue_families(device, instance, surface, debug):
+def find_queue_families(device, instance, surface):
         
     indices = QueueFamilyIndices()
 
@@ -20,8 +21,9 @@ def find_queue_families(device, instance, surface, debug):
 
     queueFamilies = vkGetPhysicalDeviceQueueFamilyProperties(device)
 
-    if debug:
-        print(f"There are {len(queueFamilies)} queue families available on the system.")
+    logging.logger.print(
+        f"There are {len(queueFamilies)} queue families available on the system."
+    )
 
     for i,queueFamily in enumerate(queueFamilies):
 
@@ -57,15 +59,11 @@ def find_queue_families(device, instance, surface, debug):
 
         if queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT:
             indices.graphicsFamily = i
-
-            if debug:
-                print(f"Queue Family {i} is suitable for graphics")
+            logging.logger.print(f"Queue Family {i} is suitable for graphics")
         
         if surfaceSupport(device, i, surface):
             indices.presentFamily = i
-
-            if debug:
-                print(f"Queue Family {i} is suitable for presenting")
+            logging.logger.print(f"Queue Family {i} is suitable for presenting")
 
         if indices.is_complete():
             break

@@ -1,5 +1,5 @@
 from config import *
-import frame
+import logging
 
 class framebufferInput:
 
@@ -10,7 +10,7 @@ class framebufferInput:
         self.renderpass = None
         self.swapchainExtent = None
 
-def make_framebuffers(inputChunk, frames, debug):
+def make_framebuffers(inputChunk, frames):
 
     for i,frame in enumerate(frames):
 
@@ -30,10 +30,8 @@ def make_framebuffers(inputChunk, frames, debug):
                 inputChunk.device, framebufferInfo, None
             )
 
-            if debug:
-                print(f"Made framebuffer for frame {i}")
+            logging.logger.print(f"Made framebuffer for frame {i}")
             
         except:
 
-            if debug:
-                print(f"Failed to make framebuffer for frame {i}")
+            logging.logger.print(f"Failed to make framebuffer for frame {i}")

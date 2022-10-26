@@ -1,6 +1,7 @@
 from config import *
+import logging
 
-def make_semaphore(device, debug):
+def make_semaphore(device):
 
     semaphoreInfo = VkSemaphoreCreateInfo()
 
@@ -10,12 +11,11 @@ def make_semaphore(device, debug):
     
     except:
 
-        if debug:
-            print("Failed to create semaphore")
+        logging.logger.print("Failed to create semaphore")
         
         return None
 
-def make_fence(device, debug):
+def make_fence(device):
 
     fenceInfo = VkFenceCreateInfo(
         flags = VK_FENCE_CREATE_SIGNALED_BIT
@@ -27,7 +27,6 @@ def make_fence(device, debug):
     
     except:
 
-        if debug:
-            print("Failed to create fence")
+        logging.logger.print("Failed to create fence")
         
         return None

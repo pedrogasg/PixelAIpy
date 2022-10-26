@@ -22,7 +22,7 @@ class SwapChainBundle:
         self.format = None
         self.extent = None
 
-def query_swapchain_support(instance, physicalDevice, surface, debug):
+def query_swapchain_support(instance, physicalDevice, surface):
 
     """
     typedef struct VkSurfaceCapabilitiesKHR {
@@ -40,78 +40,27 @@ def query_swapchain_support(instance, physicalDevice, surface, debug):
     """
     
     support = SwapChainSupportDetails()
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR = vkGetInstanceProcAddr(instance, 'vkGetPhysicalDeviceSurfaceCapabilitiesKHR')
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR = vkGetInstanceProcAddr(
+        instance, 'vkGetPhysicalDeviceSurfaceCapabilitiesKHR'
+    )
     support.capabilities = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface)
     
-    if debug:
-            
-        print("Swapchain can support the following surface capabilities:")
+    logging.logger.log_surface_capabilities(support)
 
-        print(f"\tminimum image count: {support.capabilities.minImageCount}")
-        print(f"\tmaximum image count: {support.capabilities.maxImageCount}")
-
-        print("\tcurrent extent:")
-        """
-        typedef struct VkExtent2D {
-            uint32_t    width;
-            uint32_t    height;
-        } VkExtent2D;
-        """
-        print(f"\t\twidth: {support.capabilities.currentExtent.width}")
-        print(f"\t\theight: {support.capabilities.currentExtent.height}")
-
-        print("\tminimum supported extent:")
-        print(f"\t\twidth: {support.capabilities.minImageExtent.width}")
-        print(f"\t\theight: {support.capabilities.minImageExtent.height}")
-
-        print("\tmaximum supported extent:")
-        print(f"\t\twidth: {support.capabilities.maxImageExtent.width}")
-        print(f"\t\theight: {support.capabilities.maxImageExtent.height}")
-
-        print(f"\tmaximum image array layers: {support.capabilities.maxImageArrayLayers}")
-
-            
-        print("\tsupported transforms:")
-        stringList = logging.log_transform_bits(support.capabilities.supportedTransforms)
-        for line in stringList:
-            print(f"\t\t{line}")
-
-        print("\tcurrent transform:")
-        stringList = logging.log_transform_bits(support.capabilities.currentTransform)
-        for line in stringList:
-            print(f"\t\t{line}")
-
-        print("\tsupported alpha operations:")
-        stringList = logging.log_alpha_composite_bits(support.capabilities.supportedCompositeAlpha)
-        for line in stringList:
-            print(f"\t\t{line}")
-
-        print("\tsupported image usage:")
-        stringList = logging.log_image_usage_bits(support.capabilities.supportedUsageFlags)
-        for line in stringList:
-            print(f"\t\t{line}")
-
-    vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(instance, 'vkGetPhysicalDeviceSurfaceFormatsKHR')
+    vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(
+        instance, 'vkGetPhysicalDeviceSurfaceFormatsKHR'
+    )
     support.formats = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
 
-    if debug:
+    for supportedFormat in support.formats:
+        logging.logger.log_surface_format(supportedFormat)
 
-        for supportedFormat in support.formats:
-            """
-            * typedef struct VkSurfaceFormatKHR {
-                VkFormat           format;
-                VkColorSpaceKHR    colorSpace;
-            } VkSurfaceFormatKHR;
-            """
-
-            print(f"supported pixel format: {logging.format_to_string(supportedFormat.format)}")
-            print(f"supported color space: {logging.colorspace_to_string(supportedFormat.colorSpace)}")
-
-    vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(instance, 'vkGetPhysicalDeviceSurfacePresentModesKHR')
+    vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(
+        instance, 'vkGetPhysicalDeviceSurfacePresentModesKHR'
+    )
     support.presentModes = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
 
-    for presentMode in support.presentModes:
-        print(f"\t{logging.log_present_mode(presentMode)}")
+    logging.logger.log_list(support.presentModes)
 
     return support
 
@@ -148,9 +97,9 @@ def choose_swapchain_extent(width, height, capabilities):
 
     return extent
 
-def create_swapchain(instance, logicalDevice, physicalDevice, surface, width, height, debug):
+def create_swapchain(instance, logicalDevice, physicalDevice, surface, width, height):
 
-    support = query_swapchain_support(instance, physicalDevice, surface, debug)
+    support = query_swapchain_support(instance, physicalDevice, surface)
 
     format = choose_swapchain_surface_format(support.formats)
 
@@ -183,7 +132,7 @@ def create_swapchain(instance, logicalDevice, physicalDevice, surface, width, he
         ) VULKAN_HPP_NOEXCEPT
     """
 
-    indices = queue_families.find_queue_families(physicalDevice, instance, surface, debug)
+    indices = queue_families.find_queue_families(physicalDevice, instance, surface)
     queueFamilyIndices = [
         indices.graphicsFamily, indices.presentFamily
     ]

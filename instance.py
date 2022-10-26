@@ -1,6 +1,7 @@
 from config import *
+import logging
 
-def supported(extensions, layers, debug):
+def supported(extensions, layers):
 
     """
         ExtensionProperties( std::array<char, VK_MAX_EXTENSION_NAME_SIZE> const & extensionName_ = {},
@@ -10,43 +11,34 @@ def supported(extensions, layers, debug):
     #check extension support
     supportedExtensions = [extension.extensionName for extension in vkEnumerateInstanceExtensionProperties(None)]
 
-    if debug:
-        print("Device can support the following extensions:")
-        for supportedExtension in supportedExtensions:
-            print(f"\t\"{supportedExtension}\"")
+    logging.logger.print("Device can support the following extensions:")
+    logging.logger.log_list(supportedExtensions)
     
     for extension in extensions:
         
         if extension in supportedExtensions:
-            if debug:
-                print(f"Extension \"{extension}\" is supported!")
+            logging.logger.print(f"Extension \"{extension}\" is supported!")
         else:
-            if debug:
-                print(f"Extension \"{extension}\" is not supported!")
+            logging.logger.print(f"Extension \"{extension}\" is not supported!")
             return False
 
     #check layer support
     supportedLayers = [layer.layerName for layer in vkEnumerateInstanceLayerProperties()]
 
-    if debug:
-        print("Device can support the following layers:")
-        for supportedLayer in supportedLayers:
-            print(f"\t\"{supportedLayer}\"")
+    logging.logger.print("Device can support the following layers:")
+    logging.logger.log_list(supportedLayers)
 
     for layer in layers:
         if layer in supportedLayers:
-            if debug:
-                print(f"Layer \"{layer}\" is supported!")
+            logging.logger.print(f"Layer \"{layer}\" is supported!")
         else:
-            if debug:
-                print(f"Layer \"{layer}\" is not supported!")
+            logging.logger.print(f"Layer \"{layer}\" is not supported!")
             return False
 
     return True
 
-def make_instance(debug, applicationName):
-    if debug:
-        print("Making an instance...")
+def make_instance(applicationName):
+    logging.logger.print("Making an instance...")
 
     """
         An instance stores all per-application state info, it is a vulkan handle
@@ -62,13 +54,12 @@ def make_instance(debug, applicationName):
     """
     version = vkEnumerateInstanceVersion()
     
-    if debug:
-        print(
-            f"System can support vulkan Variant: {version >> 29}\
-            , Major: {VK_VERSION_MAJOR(version)}\
-            , Minor: {VK_VERSION_MINOR(version)}\
-            , Patch: {VK_VERSION_PATCH(version)}"
-        )
+    logging.logger.print(
+        f"System can support vulkan Variant: {version >> 29}\
+        , Major: {VK_VERSION_MAJOR(version)}\
+        , Minor: {VK_VERSION_MINOR(version)}\
+        , Patch: {VK_VERSION_PATCH(version)}"
+    )
 
     """
     We can then either use this version
@@ -109,20 +100,17 @@ def make_instance(debug, applicationName):
         in order to interface with vulkan.
     """
     extensions = glfw.get_required_instance_extensions()
-    if debug:
+    if logging.logger.debug_mode:
         extensions.append(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
 
-    if debug:
-        print(f"extensions to be requested:")
-
-        for extensionName in extensions:
-            print(f"\t\" {extensionName}\"")
+    logging.logger.print("extensions to be requested:")
+    logging.logger.log_list(extensions)
     
     layers = []
-    if debug:
+    if logging.logger.debug_mode:
         layers.append("VK_LAYER_KHRONOS_validation")
 
-    supported(extensions, layers, debug)
+    supported(extensions, layers)
 
     """
         from _vulkan.py:
@@ -154,6 +142,5 @@ def make_instance(debug, applicationName):
     try:
         return vkCreateInstance(createInfo, None)
     except:
-        if (debug):
-            print("Failed to create Instance!")
+        logging.logger.print("Failed to create Instance!")
         return None
