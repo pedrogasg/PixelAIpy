@@ -52,6 +52,7 @@ class Engine:
     def make_device(self):
 
         self.physicalDevice = device.choose_physical_device(self.instance, self.debugMode)
+        device.find_queue_families(self.physicalDevice, self.debugMode)
 
     def close(self):
 

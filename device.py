@@ -11,6 +11,18 @@ from config import *
     with its own state and resources independent of other logical devices.
 """
 
+class QueueFamilyIndices:
+
+
+    def __init__(self):
+
+        self.graphicsFamily = None
+        self.presentFamily = None
+    
+    def is_complete(self):
+
+        return not(self.graphicsFamily is None or self.presentFamily is None)
+
 def log_device_properties(device):
     
     """
@@ -132,3 +144,56 @@ def choose_physical_device(instance, debug):
             return device
 
     return None
+
+def find_queue_families(device, debug):
+        
+    indices = QueueFamilyIndices()
+
+    queueFamilies = vkGetPhysicalDeviceQueueFamilyProperties(device)
+
+    if debug:
+        print(f"There are {len(queueFamilies)} queue families available on the system.")
+
+    for i,queueFamily in enumerate(queueFamilies):
+
+        """
+        * // Provided by VK_VERSION_1_0
+            typedef struct VkQueueFamilyProperties {
+            VkQueueFlags    queueFlags;
+            uint32_t        queueCount;
+            uint32_t        timestampValidBits;
+            VkExtent3D      minImageTransferGranularity;
+            } VkQueueFamilyProperties;
+
+            queueFlags is a bitmask of VkQueueFlagBits indicating capabilities of the queues in this queue family.
+
+            queueCount is the unsigned integer count of queues in this queue family. Each queue family must support 
+            at least one queue.
+
+            timestampValidBits is the unsigned integer count of meaningful bits in the timestamps written via 
+            vkCmdWriteTimestamp. The valid range for the count is 36..64 bits, or a value of 0, 
+            indicating no support for timestamps. Bits outside the valid range are guaranteed to be zeros.
+
+            minImageTransferGranularity is the minimum granularity supported for image transfer 
+            operations on the queues in this queue family.
+        
+            * // Provided by VK_VERSION_1_0
+                typedef enum VkQueueFlagBits {
+                VK_QUEUE_GRAPHICS_BIT = 0x00000001,
+                VK_QUEUE_COMPUTE_BIT = 0x00000002,
+                VK_QUEUE_TRANSFER_BIT = 0x00000004,
+                VK_QUEUE_SPARSE_BINDING_BIT = 0x00000008,
+                } VkQueueFlagBits;
+        """
+
+        if queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT:
+            indices.graphicsFamily = i
+            indices.presentFamily = i
+
+            if debug:
+                print(f"Queue Family {i} is suitable for graphics and presenting")
+
+            if indices.is_complete():
+                break
+
+    return indices
