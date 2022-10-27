@@ -84,16 +84,18 @@ class Engine:
         self.swapchainExtent = bundle.extent
         self.maxFramesInFlight = len(self.swapchainFrames)
     
-    def recreate_swapchain(self):
+    def recreate_swapchain(self, resize=False):
         """
             Destroy the current swapchain, then rebuild a new one
         """
-
-        self.width = 0
-        self.height = 0
-        while (self.width == 0 or self.height == 0):
+        if resize:
             self.width, self.height = glfw.get_window_size(self.window)
-            glfw.wait_events()
+        else:
+            self.width = 0
+            self.height = 0
+            while (self.width == 0 or self.height == 0):
+                self.width, self.height = glfw.get_window_size(self.window)
+                glfw.wait_events()
 
         vkDeviceWaitIdle(self.device)
         self.cleanup_swapchain()

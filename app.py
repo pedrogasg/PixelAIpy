@@ -33,12 +33,18 @@ class App:
         
         #create_window(int width, int height, const char *title, GLFWmonitor *monitor, GLFWwindow *share)
         self.window = glfw.create_window(width, height, "ID Tech 12", None, None)
+        glfw.set_window_user_pointer(self.window, self)
+        glfw.set_framebuffer_size_callback(self.window, self.resize_callback)
         if self.window is not None:
             logging.logger.print(
                 f"Successfully made a glfw window called \"ID Tech 12\", width: {width}, height: {height}"
             )
         else:
             logging.logger.print("GLFW window creation failed")
+
+    def resize_callback(self, window, width, height):
+        vkDeviceWaitIdle(self.graphicsEngine.device)
+        self.graphicsEngine.recreate_swapchain(resize=True)
     
     def calculate_framerate(self):
 
