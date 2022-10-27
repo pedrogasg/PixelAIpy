@@ -107,6 +107,7 @@ class Engine:
 
         inputBundle = pipeline.InputBundle(
             device = self.device,
+            scene = self.scene,
             swapchainImageFormat = self.swapchainFormat,
             swapchainExtent = self.swapchainExtent,
             vertexFilepath = "shaders/vert.spv",
@@ -224,9 +225,9 @@ class Engine:
         depthStencil = VkClearDepthStencilValue(depth=1.0, stencil=0)
         clearColor2 = VkClearValue(depthStencil=depthStencil)
 
-        #arr = ffi.new("VkClearValue[2]", [clearColor1, clearColor2])
+        arr = ffi.new("VkClearValue[2]", [clearColor1, clearColor2])
         renderpassInfo.clearValueCount = 2
-        renderpassInfo.pClearValues = ffi.addressof(clearColor1) # arr # ffi.addressof(clearColor1)
+        renderpassInfo.pClearValues = arr # ffi.addressof(clearColor1)
         
         vkCmdBeginRenderPass(commandBuffer, renderpassInfo, VK_SUBPASS_CONTENTS_INLINE)
 
@@ -254,13 +255,14 @@ class Engine:
         self.prepare_scene(commandBuffer)
         vertexCount = self.meshes.sizes[TRIANGLE]
         #for position in scene.triangle_positions:
-        model_transform = np.array(self.scene.color, dtype = np.float32)
+        
+        model_transform = np.array(self.scene.push_constant, dtype = np.float32)
         #model_transform = pyrr.matrix44.create_from_translation(vec = scene.color, dtype = np.float32)
         objData = ffi.cast("float *", ffi.from_buffer(model_transform))
         vkCmdPushConstants(
             commandBuffer=commandBuffer, layout = self.pipelineLayout,
             stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, offset = 0,
-            size = 4 * 4, pValues = objData
+            size = 4 * self.scene.push_constant_size, pValues = objData
         )
         vkCmdDraw(
             commandBuffer = commandBuffer, vertexCount = vertexCount, 

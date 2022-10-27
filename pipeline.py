@@ -6,12 +6,13 @@ import mesh
 class InputBundle:
 
 
-    def __init__(self, device, 
+    def __init__(self, device, scene,
     swapchainImageFormat, swapchainExtent, 
     vertexFilepath, geometryFilepath, fragmentFilepath
     ):
 
         self.device = device
+        self.scene = scene
         self.swapchainImageFormat = swapchainImageFormat
         self.swapchainExtent = swapchainExtent
         self.vertexFilepath = vertexFilepath
@@ -64,11 +65,11 @@ def create_render_pass(device, swapchainImageFormat):
 
     return vkCreateRenderPass(device, renderPassInfo, None)
 
-def create_pipeline_layout(device):
+def create_pipeline_layout(device, scene):
 
     pushConstantInfo = VkPushConstantRange(
         stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, offset = 0,
-        size = 4 * 4
+        size = 4 * scene.push_constant_size
     )
 
     pipelineLayoutInfo = VkPipelineLayoutCreateInfo(
@@ -194,7 +195,7 @@ def create_graphics_pipeline(inputBundle):
         blendConstants=[0.0, 0.0, 0.0, 0.0]
     )
 
-    pipelineLayout = create_pipeline_layout(inputBundle.device)
+    pipelineLayout = create_pipeline_layout(inputBundle.device, inputBundle.scene)
     renderPass = create_render_pass(inputBundle.device, inputBundle.swapchainImageFormat)
 
     dynamicState = VkPipelineDynamicStateCreateInfo(

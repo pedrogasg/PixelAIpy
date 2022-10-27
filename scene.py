@@ -5,6 +5,7 @@ class Scene:
         vertex_size = 6
         self.vertices = np.ones(height * width * vertex_size, dtype = np.float32)
         size = 2. / height
+        self.size = [size]
         for i in range(height):
 
             for j in range(width):
@@ -14,12 +15,9 @@ class Scene:
 
 
 
-        self.color = [[0.9, 0.9, 0.9, 0.5]]
+        self.color = [0.9, 0.9, 0.9, 0.5]
 
+        self.push_constant = [self.color + self.size]
 
+        self.push_constant_size = len(self.push_constant[0])
 
-        # self.vertices = np.array(
-        #     (0.0, 0.5, 0.0, 1.0, 0.0, 0.0,
-        #      0.5, 0.0, 0.0, 1.0, 0.0, 0.0,
-        #     -0.5, 0.0, 0.0, 1.0, 0.0, 0.0), dtype = np.float32
-        # )
