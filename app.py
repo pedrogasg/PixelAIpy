@@ -12,9 +12,9 @@ class App:
 
         self.build_glfw_window(width, height)
 
-        self.graphicsEngine = engine.Engine(width, height, self.window)
+        self.scene = scene.Scene(24,24)
 
-        self.scene = scene.Scene()
+        self.graphicsEngine = engine.Engine(width, height, self.window, self.scene)
 
         self.lastTime = glfw.get_time()
         self.currentTime = glfw.get_time()
@@ -60,7 +60,7 @@ class App:
         while not glfw.window_should_close(self.window):
 
             glfw.poll_events()
-            self.graphicsEngine.render(self.scene)
+            self.graphicsEngine.render()
             self.calculate_framerate()
 
     def close(self):

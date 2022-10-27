@@ -114,7 +114,9 @@ def create_logical_device(physicalDevice, instance, surface):
         Device features must be requested before the device is abstracted,
         therefore we only pay for what we use
     """
-    deviceFeatures = VkPhysicalDeviceFeatures()
+    deviceFeatures = VkPhysicalDeviceFeatures(
+        samplerAnisotropy = VK_TRUE,
+        geometryShader = VK_TRUE)
 
     enabledLayers = []
     if logging.logger.debug_mode:
@@ -129,7 +131,7 @@ def create_logical_device(physicalDevice, instance, surface):
         pQueueCreateInfos = queueCreateInfo,
         enabledExtensionCount = len(deviceExtensions),
         ppEnabledExtensionNames = deviceExtensions,
-        pEnabledFeatures = [deviceFeatures,],
+        pEnabledFeatures = (deviceFeatures),
         enabledLayerCount = len(enabledLayers),
         ppEnabledLayerNames = enabledLayers
     )

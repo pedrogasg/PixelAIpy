@@ -2,7 +2,7 @@ import app
 
 if __name__ == "__main__":
     
-    myApp = app.App(640, 480, True)
+    myApp = app.App(800, 800, True)
 
     myApp.run()
     

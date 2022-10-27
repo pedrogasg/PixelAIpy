@@ -1,15 +1,18 @@
 #version 450
 
-layout(location = 0) in vec2 vertexPosition;
-layout(location = 1) in vec3 vertexColor;
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec4 state;
 
-layout(location = 0) out vec3 fragColor;
+layout(location = 0) out vec4 cellColor;
 
-layout (push_constant) uniform constants {
-	mat4 model;
-} ObjectData;
+layout(push_constant) uniform Push {
+	vec4 color;
+	float size;
+} push;
 
 void main() {
-	gl_Position = ObjectData.model * vec4(vertexPosition, 0.0, 1.0);
-	fragColor = vertexColor;
+	gl_Position = vec4(position, 0.0, 1.0);
+	gl_PointSize = 1.0;
+	cellColor = push.color;
+
 }

@@ -12,13 +12,15 @@ import vertex_menagerie
 class Engine:
 
     
-    def __init__(self, width, height, window):
+    def __init__(self, width, height, window, scene):
 
         #glfw window parameters
         self.width = width
         self.height = height
 
         self.window = window
+
+        self.scene = scene
 
         logging.logger.print("Making a graphics engine")
         
@@ -108,6 +110,7 @@ class Engine:
             swapchainImageFormat = self.swapchainFormat,
             swapchainExtent = self.swapchainExtent,
             vertexFilepath = "shaders/vert.spv",
+            geometryFilepath = "shaders/geom.spv",
             fragmentFilepath = "shaders/frag.spv"
         )
 
@@ -181,53 +184,10 @@ class Engine:
 
         self.meshes = vertex_menagerie.VertexMenagerie()
         
-        vertices = np.array(
-            (0.0, -0.05, 0.0, 1.0, 0.0,
-             0.05, 0.05, 0.0, 1.0, 0.0,
-            -0.05, 0.05, 0.0, 1.0, 0.0), dtype = np.float32
-        )
+        vertices = self.scene.vertices
         meshType = TRIANGLE
         self.meshes.consume(meshType, vertices)
 
-        vertices = np.array(
-            (-0.05,  0.05, 1.0, 0.0, 0.0,
-		     -0.05, -0.05, 1.0, 0.0, 0.0,
-		      0.05, -0.05, 1.0, 0.0, 0.0,
-		      0.05, -0.05, 1.0, 0.0, 0.0,
-		      0.05,  0.05, 1.0, 0.0, 0.0,
-		     -0.05,  0.05, 1.0, 0.0, 0.0), dtype = np.float32
-        )
-        meshType = SQUARE
-        self.meshes.consume(meshType, vertices)
-
-        vertices = np.array(
-            (-0.05, -0.025, 0.0, 0.0, 1.0,
-		     -0.02, -0.025, 0.0, 0.0, 1.0,
-             -0.03,    0.0, 0.0, 0.0, 1.0,
-		     -0.02, -0.025, 0.0, 0.0, 1.0,
-		       0.0,  -0.05, 0.0, 0.0, 1.0,
-		      0.02, -0.025, 0.0, 0.0, 1.0,
-		     -0.03,    0.0, 0.0, 0.0, 1.0,
-		     -0.02, -0.025, 0.0, 0.0, 1.0,
-		      0.02, -0.025, 0.0, 0.0, 1.0,
-		      0.02, -0.025, 0.0, 0.0, 1.0,
-		      0.05, -0.025, 0.0, 0.0, 1.0,
-		      0.03,    0.0, 0.0, 0.0, 1.0,
-		     -0.03,    0.0, 0.0, 0.0, 1.0,
-		      0.02, -0.025, 0.0, 0.0, 1.0,
-		      0.03,    0.0, 0.0, 0.0, 1.0,
-		      0.03,    0.0, 0.0, 0.0, 1.0,
-		      0.04,   0.05, 0.0, 0.0, 1.0,
-		       0.0,   0.01, 0.0, 0.0, 1.0,
-		     -0.03,    0.0, 0.0, 0.0, 1.0,
-		      0.03,    0.0, 0.0, 0.0, 1.0,
-		       0.0,   0.01, 0.0, 0.0, 1.0,
-		     -0.03,    0.0, 0.0, 0.0, 1.0,
-		       0.0,   0.01, 0.0, 0.0, 1.0,
-		     -0.04,   0.05, 0.0, 0.0, 1.0), dtype = np.float32
-        )
-        meshType = STAR
-        self.meshes.consume(meshType, vertices)
 
         finalization_chunk = vertex_menagerie.VertexBufferFinalizationChunk()
         finalization_chunk.command_buffer = self.mainCommandbuffer
@@ -244,7 +204,7 @@ class Engine:
             pOffsets = (0,)
         )
 
-    def record_draw_commands(self, commandBuffer, imageIndex, scene):
+    def record_draw_commands(self, commandBuffer, imageIndex):
 
         beginInfo = VkCommandBufferBeginInfo()
 
@@ -259,63 +219,55 @@ class Engine:
             renderArea = [[0,0], self.swapchainExtent]
         )
         
-        clearColor = VkClearValue([[1.0, 0.5, 0.25, 1.0]])
-        renderpassInfo.clearValueCount = 1
-        renderpassInfo.pClearValues = ffi.addressof(clearColor)
+        clearColor1 = VkClearValue(color=[[0.1,0.1,0.1,1.0]])
+
+        depthStencil = VkClearDepthStencilValue(depth=1.0, stencil=0)
+        clearColor2 = VkClearValue(depthStencil=depthStencil)
+
+        #arr = ffi.new("VkClearValue[2]", [clearColor1, clearColor2])
+        renderpassInfo.clearValueCount = 2
+        renderpassInfo.pClearValues = ffi.addressof(clearColor1) # arr # ffi.addressof(clearColor1)
         
         vkCmdBeginRenderPass(commandBuffer, renderpassInfo, VK_SUBPASS_CONTENTS_INLINE)
+
+        viewport = VkViewport(
+            x=0,
+            y=0,
+            width=self.swapchainExtent.width,
+            height = self.swapchainExtent.height,
+            minDepth=0.0,
+            maxDepth=1.0
+        )
+
+    #transformation from image to framebuffer: cutout
+        scissor = VkRect2D(
+            offset=[0,0],
+            extent=self.swapchainExtent
+        )
+
+        vkCmdSetViewport(commandBuffer, 0, 1, (viewport,))
+        vkCmdSetScissor(commandBuffer, 0, 1, (scissor,))
+
         
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self.pipeline)
 
         self.prepare_scene(commandBuffer)
-        firstVertex = self.meshes.offsets[TRIANGLE]
         vertexCount = self.meshes.sizes[TRIANGLE]
-        for position in scene.triangle_positions:
-            
-            model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
-            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
-            vkCmdPushConstants(
-                commandBuffer=commandBuffer, layout = self.pipelineLayout,
-                stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
-                size = 4 * 4 * 4, pValues = objData
-            )
-            vkCmdDraw(
-                commandBuffer = commandBuffer, vertexCount = vertexCount, 
-                instanceCount = 1, firstVertex = firstVertex, firstInstance = 0
-            )
+        #for position in scene.triangle_positions:
+        model_transform = np.array(self.scene.color, dtype = np.float32)
+        #model_transform = pyrr.matrix44.create_from_translation(vec = scene.color, dtype = np.float32)
+        objData = ffi.cast("float *", ffi.from_buffer(model_transform))
+        vkCmdPushConstants(
+            commandBuffer=commandBuffer, layout = self.pipelineLayout,
+            stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, offset = 0,
+            size = 4 * 4, pValues = objData
+        )
+        vkCmdDraw(
+            commandBuffer = commandBuffer, vertexCount = vertexCount, 
+            instanceCount = 1, firstVertex = 0, firstInstance = 0
+        )
         
-        firstVertex = self.meshes.offsets[SQUARE]
-        vertexCount = self.meshes.sizes[SQUARE]
-        for position in scene.square_positions:
-            
-            model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
-            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
-            vkCmdPushConstants(
-                commandBuffer=commandBuffer, layout = self.pipelineLayout,
-                stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
-                size = 4 * 4 * 4, pValues = objData
-            )
-            vkCmdDraw(
-                commandBuffer = commandBuffer, vertexCount = vertexCount, 
-                instanceCount = 1, firstVertex = firstVertex, firstInstance = 0
-            )
-        
-        firstVertex = self.meshes.offsets[STAR]
-        vertexCount = self.meshes.sizes[STAR]
-        for position in scene.star_positions:
-            
-            model_transform = pyrr.matrix44.create_from_translation(vec = position, dtype = np.float32)
-            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
-            vkCmdPushConstants(
-                commandBuffer=commandBuffer, layout = self.pipelineLayout,
-                stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
-                size = 4 * 4 * 4, pValues = objData
-            )
-            vkCmdDraw(
-                commandBuffer = commandBuffer, vertexCount = vertexCount, 
-                instanceCount = 1, firstVertex = firstVertex, firstInstance = 0
-            )
-        
+    
         vkCmdEndRenderPass(commandBuffer)
         
         try:
@@ -323,7 +275,7 @@ class Engine:
         except:
             logging.logger.print("Failed to end recording command buffer")
     
-    def render(self, scene):
+    def render(self):
 
         #grab instance procedures
         vkAcquireNextImageKHR = vkGetDeviceProcAddr(self.device, 'vkAcquireNextImageKHR')
@@ -349,7 +301,7 @@ class Engine:
 
         commandBuffer = self.swapchainFrames[self.frameNumber].commandbuffer
         vkResetCommandBuffer(commandBuffer = commandBuffer, flags = 0)
-        self.record_draw_commands(commandBuffer, imageIndex, scene)
+        self.record_draw_commands(commandBuffer, imageIndex)
 
         submitInfo = VkSubmitInfo(
             waitSemaphoreCount = 1, pWaitSemaphores = [self.swapchainFrames[self.frameNumber].imageAvailable,], 

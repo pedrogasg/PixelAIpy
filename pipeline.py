@@ -8,13 +8,14 @@ class InputBundle:
 
     def __init__(self, device, 
     swapchainImageFormat, swapchainExtent, 
-    vertexFilepath, fragmentFilepath
+    vertexFilepath, geometryFilepath, fragmentFilepath
     ):
 
         self.device = device
         self.swapchainImageFormat = swapchainImageFormat
         self.swapchainExtent = swapchainExtent
         self.vertexFilepath = vertexFilepath
+        self.geometryFilepath = geometryFilepath
         self.fragmentFilepath = fragmentFilepath
 
 class OuputBundle:
@@ -66,8 +67,8 @@ def create_render_pass(device, swapchainImageFormat):
 def create_pipeline_layout(device):
 
     pushConstantInfo = VkPushConstantRange(
-        stageFlags = VK_SHADER_STAGE_VERTEX_BIT, offset = 0,
-        size = 4 * 4 * 4
+        stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, offset = 0,
+        size = 4 * 4
     )
 
     pipelineLayoutInfo = VkPipelineLayoutCreateInfo(
@@ -105,33 +106,31 @@ def create_graphics_pipeline(inputBundle):
     #input assembly, which construction method to use with vertices
     inputAssembly = VkPipelineInputAssemblyStateCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-        topology=VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+        topology=VK_PRIMITIVE_TOPOLOGY_POINT_LIST, #VK_PRIMITIVE_TOPOLOGY_POINT_LIST, # VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
         primitiveRestartEnable=VK_FALSE #allows "breaking up" of strip topologies
     )
 
     #transformation from image to framebuffer: stretch
-    viewport = VkViewport(
-        x=0,
-        y=0,
-        width=inputBundle.swapchainExtent.width,
-        height = inputBundle.swapchainExtent.height,
-        minDepth=0.0,
-        maxDepth=1.0
-    )
+    # viewport = VkViewport(
+    #     x=0,
+    #     y=0,
+    #     width=inputBundle.swapchainExtent.width,
+    #     height = inputBundle.swapchainExtent.height,
+    #     minDepth=0.0,
+    #     maxDepth=1.0
+    # )
 
-    #transformation from image to framebuffer: cutout
-    scissor = VkRect2D(
-        offset=[0,0],
-        extent=inputBundle.swapchainExtent
-    )
+    # #transformation from image to framebuffer: cutout
+    # scissor = VkRect2D(
+    #     offset=[0,0],
+    #     extent=inputBundle.swapchainExtent
+    # )
 
     #these two transformations combine to define the state of the viewport
     viewportState = VkPipelineViewportStateCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         viewportCount=1,
-        pViewports=viewport,
-        scissorCount=1,
-        pScissors=scissor
+        scissorCount=1
     )
 
     #rasterizer interpolates between vertices to produce fragments, it
@@ -142,10 +141,22 @@ def create_graphics_pipeline(inputBundle):
         rasterizerDiscardEnable=VK_FALSE,
         polygonMode=VK_POLYGON_MODE_FILL,
         lineWidth=1.0,
-        cullMode=VK_CULL_MODE_BACK_BIT,
+        cullMode=VK_CULL_MODE_NONE,
         frontFace=VK_FRONT_FACE_CLOCKWISE,
         depthBiasEnable=VK_FALSE #optional transform on depth values
     )
+
+    #fragment shader takes fragments from the rasterizer and colours them
+    #appropriately
+    logging.logger.print(f"Load shader module: {inputBundle.geometryFilepath}")
+    geometryShaderModule = shaders.create_shader_module(inputBundle.device, inputBundle.geometryFilepath)
+    geometryShaderStageInfo = VkPipelineShaderStageCreateInfo(
+        sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        stage=VK_SHADER_STAGE_GEOMETRY_BIT,
+        module=geometryShaderModule,
+        pName="main"
+    )
+
 
     #multisampling parameters
     multisampling = VkPipelineMultisampleStateCreateInfo(
@@ -165,7 +176,9 @@ def create_graphics_pipeline(inputBundle):
         pName="main"
     )
 
-    shaderStages = [vertexShaderStageInfo, fragmentShaderStageInfo]
+    shaderStages = [vertexShaderStageInfo, fragmentShaderStageInfo, geometryShaderStageInfo]
+
+    #shaderStages = [vertexShaderStageInfo, fragmentShaderStageInfo]
 
     #color blending, take the output from the fragment shader then incorporate it with the
     #existing pixel, if it has been set.
@@ -184,26 +197,44 @@ def create_graphics_pipeline(inputBundle):
     pipelineLayout = create_pipeline_layout(inputBundle.device)
     renderPass = create_render_pass(inputBundle.device, inputBundle.swapchainImageFormat)
 
+    dynamicState = VkPipelineDynamicStateCreateInfo(
+        dynamicStateCount=2,
+        pDynamicStates= [VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR],
+        flags = 0
+    )
+
+    depthStencil = VkPipelineDepthStencilStateCreateInfo(
+        depthTestEnable=VK_TRUE,
+        depthWriteEnable=VK_TRUE,
+        depthCompareOp=VK_COMPARE_OP_LESS,
+        depthBoundsTestEnable=VK_FALSE,
+        minDepthBounds=0.0,
+        maxDepthBounds=1.0,
+        stencilTestEnable=VK_FALSE
+    )
+
     pipelineInfo = VkGraphicsPipelineCreateInfo(
         sType=VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        stageCount=2,
+        stageCount=3,
         pStages=shaderStages,
         pVertexInputState=vertexInputInfo,
         pInputAssemblyState=inputAssembly,
         pViewportState=viewportState,
         pRasterizationState=raterizer,
         pMultisampleState=multisampling,
-        pDepthStencilState=None,
         pColorBlendState=colorBlending,
         layout=pipelineLayout,
         renderPass=renderPass,
-        subpass=0 #index to subpass 0, the only subpass
+        subpass=0, #index to subpass 0, the only subpass,
+        pDynamicState=dynamicState,
+        pDepthStencilState=depthStencil
     )
 
     #vkCreateGraphicsPipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines=None)
     graphicsPipeline = vkCreateGraphicsPipelines(inputBundle.device, VK_NULL_HANDLE, 1, pipelineInfo, None)[0]
 
     vkDestroyShaderModule(inputBundle.device, vertexShaderModule, None)
+    vkDestroyShaderModule(inputBundle.device, geometryShaderModule, None)
     vkDestroyShaderModule(inputBundle.device, fragmentShaderModule, None)
 
     return OuputBundle(

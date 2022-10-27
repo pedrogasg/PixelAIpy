@@ -1,23 +1,25 @@
 from config import *
 
 class Scene:
+    def __init__(self, height, width):
+        vertex_size = 6
+        self.vertices = np.ones(height * width * vertex_size, dtype = np.float32)
+        size = 2. / height
+        for i in range(height):
+
+            for j in range(width):
+                position = (((i * height)) + j) * vertex_size
+                self.vertices[position] = (i * size) - ((height / 2.) * size)
+                self.vertices[position + 1] = (j * size) - ((width / 2.) * size)
 
 
-    def __init__(self):
 
-        self.triangle_positions = []
-        self.square_positions = []
-        self.star_positions = []
+        self.color = [[0.9, 0.9, 0.9, 0.5]]
 
-        y = -.8
-        while y < 1.0:
-            self.triangle_positions.append(
-                np.array([-0.6, y, 0], dtype = np.float32)
-            )
-            self.square_positions.append(
-                np.array([0.0, y, 0], dtype = np.float32)
-            )
-            self.star_positions.append(
-                np.array([0.6, y, 0], dtype = np.float32)
-            )
-            y += 0.2
+
+
+        # self.vertices = np.array(
+        #     (0.0, 0.5, 0.0, 1.0, 0.0, 0.0,
+        #      0.5, 0.0, 0.0, 1.0, 0.0, 0.0,
+        #     -0.5, 0.0, 0.0, 1.0, 0.0, 0.0), dtype = np.float32
+        # )
