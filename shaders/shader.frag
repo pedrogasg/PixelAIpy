@@ -12,9 +12,10 @@ const float M_PI = 3.1415926538;
 
 void main() {
     if (center.x < -0.9 || center.x > 0.9 || center.y < -0.9 || center.y > 0.9) {
-        discard;
+        float distance = sqrt(dot(center, center));
+        outColor = vec4(push.color.xyz, 1.2-distance);     
+    }else{
+        outColor = push.color;
     }
-    float distance = sqrt(dot(center, center));
-    float cosDis = (cos(distance * M_PI));
-    outColor = vec4(push.color.xyz + 0.1 * cosDis, cosDis);     
+    
 }
