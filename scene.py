@@ -1,3 +1,4 @@
+from bdb import effective
 from config import *
 
 class Scene:
@@ -15,11 +16,11 @@ class Scene:
                 self.vertices[position + 2] = i
                 self.vertices[position + 3] = j
 
-
+        self.agent = [10.,10.]
 
         self.color = [0.9, 0.9, 0.9, 0.5]
 
-        self.push_constant = [self.color + self.size]
+        self.push_constant = [self.color + self.agent + self.size]
 
         self.push_constant_size = len(self.push_constant[0])
 

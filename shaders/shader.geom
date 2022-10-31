@@ -11,6 +11,7 @@ layout(location = 1) out flat float is_agent;
 
 layout(push_constant) uniform Push {
 	vec4 color;
+    vec2 agent;
     float size;
 } push;
 
