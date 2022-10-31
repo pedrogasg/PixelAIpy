@@ -32,7 +32,7 @@ class Engine:
     
     def make_instance(self):
 
-        self.instance = instance.make_instance("ID tech 12")
+        self.instance = instance.make_instance("GridWorld")
 
         if logging.logger.debug_mode:
             self.debugMessenger = logging.make_debug_messenger(self.instance)

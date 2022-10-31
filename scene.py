@@ -3,7 +3,7 @@ from config import *
 
 class Scene:
     def __init__(self, height, width):
-        vertex_size = 6
+        vertex_size = 8
         self.vertices = np.zeros(height * width * vertex_size, dtype = np.float32)
         size = 2. / height
         self.size = [size]
@@ -16,7 +16,7 @@ class Scene:
                 self.vertices[position + 2] = i
                 self.vertices[position + 3] = j
 
-        self.agent = [10.,10.]
+        self.agent = [3.,0.]
 
         self.color = [0.9, 0.9, 0.9, 0.5]
 

@@ -1,8 +1,7 @@
 #version 450
 
-layout(location = 0) in vec2 position;
+layout(location = 0) in vec4 position;
 layout(location = 1) in vec4 state;
-
 layout(location = 0) out flat float is_agent;
 
 layout(push_constant) uniform Push {
@@ -12,9 +11,9 @@ layout(push_constant) uniform Push {
 } push;
 
 void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
+	gl_Position = vec4(position.x, position.y, 0.0, 1.0);
 	gl_PointSize = 1.0;
-	if(state.x == push.agent.x && state.y == push.agent.y)
+	if(position.z == push.agent.x && position.w == push.agent.y)
 		is_agent = 1.;
 	else
 		is_agent = 0.;

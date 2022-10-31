@@ -15,7 +15,7 @@ def get_pos_color_binding_description():
     """
 
     return VkVertexInputBindingDescription(
-        binding = 0, stride = 24, inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+        binding = 0, stride = 32, inputRate = VK_VERTEX_INPUT_RATE_VERTEX
     )
 
 def get_pos_color_attribute_descriptions():
@@ -36,12 +36,12 @@ def get_pos_color_attribute_descriptions():
     return (
         VkVertexInputAttributeDescription(
             binding = 0, location = 0,
-            format = VK_FORMAT_R32G32_SFLOAT,
+            format = VK_FORMAT_R32G32B32A32_SFLOAT,
             offset = 0
         ),
         VkVertexInputAttributeDescription(
             binding = 0, location = 1,
             format = VK_FORMAT_R32G32B32A32_SFLOAT,
-            offset = 8
+            offset = 16
         )
     )

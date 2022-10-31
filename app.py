@@ -32,12 +32,12 @@ class App:
         glfw.window_hint(GLFW_CONSTANTS.GLFW_RESIZABLE, GLFW_CONSTANTS.GLFW_TRUE)
         
         #create_window(int width, int height, const char *title, GLFWmonitor *monitor, GLFWwindow *share)
-        self.window = glfw.create_window(width, height, "ID Tech 12", None, None)
+        self.window = glfw.create_window(width, height, "GridWorld", None, None)
         glfw.set_window_user_pointer(self.window, self)
         glfw.set_framebuffer_size_callback(self.window, self.resize_callback)
         if self.window is not None:
             logging.logger.print(
-                f"Successfully made a glfw window called \"ID Tech 12\", width: {width}, height: {height}"
+                f"Successfully made a glfw window called \"GridWorld\", width: {width}, height: {height}"
             )
         else:
             logging.logger.print("GLFW window creation failed")

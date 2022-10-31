@@ -25,7 +25,7 @@ class VertexMenagerie:
 
         self.lump = np.append(self.lump, vertexData)
 
-        vertexCount = int(vertexData.size // 6)
+        vertexCount = int(vertexData.size // 8)
 
         self.offsets[meshType] = self.offset
         self.sizes[meshType] = vertexCount
