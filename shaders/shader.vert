@@ -3,7 +3,7 @@
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec4 state;
 layout(location = 0) out flat float is_agent;
-layout(location = 1) out flat float is_wall;
+layout(location = 1) out flat vec2 current_state;
 
 layout(push_constant) uniform Push {
 	vec4 color;
@@ -19,10 +19,11 @@ void main() {
 		is_agent = 1.;
 	else
 		is_agent = 0.;
-
+	current_state = vec2(0);
 	if(state.x == 1)
-		is_wall = 1.;
-	else
-		is_wall = 0.;
+		current_state.x = 1.;
+
+	if(state.y == 1)
+		current_state.y = 1.;
 
 }

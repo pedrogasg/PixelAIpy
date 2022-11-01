@@ -46,9 +46,9 @@ class Scene:
     def add_state(self, state):
         
         position = (((state[0] * self.height)) + state[1]) * self.vertex_size
-        self.world_state[state[0],state[1]] = 0
-        self.world_actions[state[0]+1,state[1]+1] = 0
-        self.vertices[position + 4] = 1
+        #self.world_state[state[0],state[1]] = 0
+        #self.world_actions[state[0]+1,state[1]+1] = 0
+        self.vertices[position + 5] = 1
         self.dirty = True
     
 
