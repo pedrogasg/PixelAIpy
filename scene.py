@@ -26,6 +26,7 @@ class Scene:
         self.height = height
         self.width = width
         self.world_state = np.random.choice([0,1],(height,width), p=[0.1,0.9])
+        self.painted_state = np.copy(self.world_state)
         self.world_actions = np.pad(self.world_state,1)
 
         xs, ys = np.where(self.world_state == 0)
@@ -46,6 +47,7 @@ class Scene:
     def add_state(self, state):
         
         position = (((state[0] * self.height)) + state[1]) * self.vertex_size
+        self.painted_state[state[0],state[1]] = 0
         #self.world_state[state[0],state[1]] = 0
         #self.world_actions[state[0]+1,state[1]+1] = 0
         self.vertices[position + 5] = 1
