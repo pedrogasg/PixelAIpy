@@ -61,11 +61,22 @@ class App:
         
         self.numFrames += 1
 
+    def move_controls(self):
+        if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS:
+            self.scene.move_down()
+        elif glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS:
+            self.scene.move_up()
+        elif glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS:
+            self.scene.move_left()
+        elif glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
+            self.scene.move_right()
+            
     def run(self):
 
         while not glfw.window_should_close(self.window):
 
-            glfw.poll_events()
+            glfw.wait_events()
+            self.move_controls()
             self.graphicsEngine.render()
             self.calculate_framerate()
 
