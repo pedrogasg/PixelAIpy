@@ -77,6 +77,7 @@ class App:
 
             glfw.wait_events()
             self.move_controls()
+            self.scene.add_state(self.scene.agent)
             self.graphicsEngine.render()
             self.calculate_framerate()
 

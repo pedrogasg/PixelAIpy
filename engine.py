@@ -187,9 +187,8 @@ class Engine:
 
         self.meshes = vertex_menagerie.VertexMenagerie()
         
-        vertices = self.scene.vertices
         meshType = TRIANGLE
-        self.meshes.consume(meshType, vertices)
+        self.meshes.consume(meshType, self.scene.vertices)
 
 
         finalization_chunk = vertex_menagerie.VertexBufferFinalizationChunk()
@@ -292,6 +291,13 @@ class Engine:
         vkResetFences(
             device = self.device, fenceCount = 1, pFences = [self.swapchainFrames[self.frameNumber].inFlight,]
         )
+        if self.scene.dirty:
+            finalization_chunk = vertex_menagerie.VertexBufferFinalizationChunk()
+            finalization_chunk.command_buffer = self.mainCommandbuffer
+            finalization_chunk.logical_device = self.device
+            finalization_chunk.physical_device = self.physicalDevice
+            finalization_chunk.queue = self.graphicsQueue
+            self.meshes.update(finalization_chunk)
         
         try:
             imageIndex = vkAcquireNextImageKHR(
