@@ -1,6 +1,6 @@
 from config import *
 import instance
-import logging
+import vlogging
 import device
 import swapchain
 import pipeline
@@ -22,7 +22,7 @@ class Engine:
 
         self.scene = scene
 
-        logging.logger.print("Making a graphics engine")
+        vlogging.logger.print("Making a graphics engine")
         
         self.make_instance()
         self.make_device()
@@ -34,8 +34,8 @@ class Engine:
 
         self.instance = instance.make_instance("GridWorld")
 
-        if logging.logger.debug_mode:
-            self.debugMessenger = logging.make_debug_messenger(self.instance)
+        if vlogging.logger.debug_mode:
+            self.debugMessenger = vlogging.make_debug_messenger(self.instance)
 
         c_style_surface = ffi.new("VkSurfaceKHR*")
         if (
@@ -44,9 +44,9 @@ class Engine:
                 allocator = None, surface = c_style_surface
             ) != VK_SUCCESS
         ):
-            logging.logger.print("Failed to abstract glfw's surface for vulkan")
+            vlogging.logger.print("Failed to abstract glfw's surface for vulkan")
         else:
-            logging.logger.print("Successfully abstracted glfw's surface for vulkan")
+            vlogging.logger.print("Successfully abstracted glfw's surface for vulkan")
         self.surface = c_style_surface[0]
     
     def make_device(self):
@@ -213,7 +213,7 @@ class Engine:
         try:
             vkBeginCommandBuffer(commandBuffer, beginInfo)
         except:
-            logging.logger.print("Failed to begin recording command buffer")
+            vlogging.logger.print("Failed to begin recording command buffer")
         
         renderpassInfo = VkRenderPassBeginInfo(
             renderPass = self.renderpass,
@@ -276,7 +276,7 @@ class Engine:
         try:
             vkEndCommandBuffer(commandBuffer)
         except:
-            logging.logger.print("Failed to end recording command buffer")
+            vlogging.logger.print("Failed to end recording command buffer")
     
     def render(self):
 
@@ -305,7 +305,7 @@ class Engine:
                 semaphore = self.swapchainFrames[self.frameNumber].imageAvailable, fence = VK_NULL_HANDLE
             )
         except:
-            logging.logger.print("recreate swapchain")
+            vlogging.logger.print("recreate swapchain")
             self.recreate_swapchain()
             return
 
@@ -326,7 +326,7 @@ class Engine:
                 pSubmits = submitInfo, fence = self.swapchainFrames[self.frameNumber].inFlight
             )
         except:
-            logging.logger.print("Failed to submit draw commands")
+            vlogging.logger.print("Failed to submit draw commands")
         
         presentInfo = VkPresentInfoKHR(
             waitSemaphoreCount = 1, pWaitSemaphores = [self.swapchainFrames[self.frameNumber].renderFinished,],
@@ -337,7 +337,7 @@ class Engine:
         try:
             vkQueuePresentKHR(self.presentQueue, presentInfo)
         except:
-            logging.logger.print("recreate swapchain")
+            vlogging.logger.print("recreate swapchain")
             self.recreate_swapchain()
             return
 
@@ -366,7 +366,7 @@ class Engine:
 
         vkDeviceWaitIdle(self.device)
 
-        logging.logger.print("Goodbye see you!\n")
+        vlogging.logger.print("Goodbye see you!\n")
 
         vkDestroyCommandPool(self.device, self.commandPool, None)
 
@@ -384,7 +384,7 @@ class Engine:
         
         destructionFunction = vkGetInstanceProcAddr(self.instance, "vkDestroySurfaceKHR")
         destructionFunction(self.instance, self.surface, None)
-        if logging.logger.debug_mode:
+        if vlogging.logger.debug_mode:
             #fetch destruction function
             destructionFunction = vkGetInstanceProcAddr(self.instance, 'vkDestroyDebugReportCallbackEXT')
 

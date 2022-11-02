@@ -19,7 +19,7 @@ from vulkan import *
 
 	We will look at this later, once we've created an instance and device.
 """
-
+import asyncio
 import glfw
 import glfw.GLFW as GLFW_CONSTANTS
 import numpy as np

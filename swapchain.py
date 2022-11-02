@@ -1,5 +1,5 @@
 from config import *
-import logging
+import vlogging
 import queue_families
 import frame
 
@@ -45,7 +45,7 @@ def query_swapchain_support(instance, physicalDevice, surface):
     )
     support.capabilities = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface)
     
-    logging.logger.log_surface_capabilities(support)
+    vlogging.logger.log_surface_capabilities(support)
 
     vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(
         instance, 'vkGetPhysicalDeviceSurfaceFormatsKHR'
@@ -53,14 +53,14 @@ def query_swapchain_support(instance, physicalDevice, surface):
     support.formats = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
 
     for supportedFormat in support.formats:
-        logging.logger.log_surface_format(supportedFormat)
+        vlogging.logger.log_surface_format(supportedFormat)
 
     vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(
         instance, 'vkGetPhysicalDeviceSurfacePresentModesKHR'
     )
     support.presentModes = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
 
-    logging.logger.log_list(support.presentModes)
+    vlogging.logger.log_list(support.presentModes)
 
     return support
 

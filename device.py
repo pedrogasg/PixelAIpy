@@ -1,5 +1,5 @@
 from config import *
-import logging
+import vlogging
 import queue_families
 
 """
@@ -24,8 +24,8 @@ def check_device_extension_support(device, requestedExtensions):
         for extension in vkEnumerateDeviceExtensionProperties(device, None)
     ]
 
-    logging.logger.print("Device can support extensions:")
-    logging.logger.log_list(supportedExtensions)
+    vlogging.logger.print("Device can support extensions:")
+    vlogging.logger.log_list(supportedExtensions)
 
     for extension in requestedExtensions:
         if extension not in supportedExtensions:
@@ -35,7 +35,7 @@ def check_device_extension_support(device, requestedExtensions):
 
 def is_suitable(device):
 
-    logging.logger.print("Checking if device is suitable")
+    vlogging.logger.print("Checking if device is suitable")
 
     """
         A device is suitable if it can present to the screen, ie support
@@ -45,15 +45,15 @@ def is_suitable(device):
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
     ]
 
-    logging.logger.print("We are requesting device extensions:")
-    logging.logger.log_list(requestedExtensions)
+    vlogging.logger.print("We are requesting device extensions:")
+    vlogging.logger.log_list(requestedExtensions)
 
     if check_device_extension_support(device, requestedExtensions):
 
-        logging.logger.print("Device can support the requested extensions!")
+        vlogging.logger.print("Device can support the requested extensions!")
         return True
     
-    logging.logger.print("Device can't support the requested extensions!")
+    vlogging.logger.print("Device can't support the requested extensions!")
 
     return False
 
@@ -66,20 +66,20 @@ def choose_physical_device(instance):
         independently to the program.
     """
 
-    logging.logger.print("Choosing Physical Device")
+    vlogging.logger.print("Choosing Physical Device")
 
     """
         vkEnumeratePhysicalDevices(instance) -> List(vkPhysicalDevice)
     """
     availableDevices = vkEnumeratePhysicalDevices(instance)
 
-    logging.logger.print(
+    vlogging.logger.print(
         f"There are {len(availableDevices)} physical devices available on this system"
     )
 
     # check if a suitable device can be found
     for device in availableDevices:
-        logging.logger.log_device_properties(device)
+        vlogging.logger.log_device_properties(device)
         if is_suitable(device):
             return device
 
@@ -119,7 +119,7 @@ def create_logical_device(physicalDevice, instance, surface):
         geometryShader = VK_TRUE)
 
     enabledLayers = []
-    if logging.logger.debug_mode:
+    if vlogging.logger.debug_mode:
         enabledLayers.append("VK_LAYER_KHRONOS_validation")
     
     deviceExtensions = [

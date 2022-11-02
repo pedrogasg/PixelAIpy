@@ -1,14 +1,14 @@
 from config import *
 import engine
 import scene
-import logging
+import vlogging
 
 class App:
 
 
     def __init__(self, width, height, debugMode):
 
-        logging.logger.set_debug_mode(debugMode)
+        vlogging.logger.set_debug_mode(debugMode)
 
         self.build_glfw_window(width, height)
 
@@ -36,11 +36,11 @@ class App:
         glfw.set_window_user_pointer(self.window, self)
         glfw.set_framebuffer_size_callback(self.window, self.resize_callback)
         if self.window is not None:
-            logging.logger.print(
+            vlogging.logger.print(
                 f"Successfully made a glfw window called \"GridWorld\", width: {width}, height: {height}"
             )
         else:
-            logging.logger.print("GLFW window creation failed")
+            vlogging.logger.print("GLFW window creation failed")
 
     def resize_callback(self, window, width, height):
         vkDeviceWaitIdle(self.graphicsEngine.device)
@@ -71,7 +71,7 @@ class App:
         elif glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
             self.scene.move_right()
             
-    def run(self):
+    async def run(self):
 
         while not glfw.window_should_close(self.window):
 
@@ -80,6 +80,13 @@ class App:
             self.scene.add_state(self.scene.agent)
             self.graphicsEngine.render()
             self.calculate_framerate()
+            await self.random_move()
+            
+
+    async def random_move(self):
+        self.scene.random_move()
+        await asyncio.sleep(0.05)
+        glfw.post_empty_event()
 
     def close(self):
 

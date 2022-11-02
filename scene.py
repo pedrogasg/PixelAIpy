@@ -59,8 +59,14 @@ class Scene:
        
     def move_up(self):
         self.agent = [self.agent[0], self.agent[1] - self.actions[2]]
+    
     def move_left(self):
         self.agent = [self.agent[0] - self.actions[0], self.agent[1] ]
 
     def move_right(self):
         self.agent = [self.agent[0] + self.actions[1], self.agent[1]]
+
+    def random_move(self):
+        movent_set = [self.move_down, self.move_up, self.move_left, self.move_right]
+        direction = np.random.choice(range(4))
+        movent_set[direction]()

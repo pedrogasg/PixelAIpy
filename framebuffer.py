@@ -1,5 +1,5 @@
 from config import *
-import logging
+import vlogging
 
 class framebufferInput:
 
@@ -30,8 +30,8 @@ def make_framebuffers(inputChunk, frames):
                 inputChunk.device, framebufferInfo, None
             )
 
-            logging.logger.print(f"Made framebuffer for frame {i}")
+            vlogging.logger.print(f"Made framebuffer for frame {i}")
             
         except:
 
-            logging.logger.print(f"Failed to make framebuffer for frame {i}")
+            vlogging.logger.print(f"Failed to make framebuffer for frame {i}")

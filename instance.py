@@ -1,5 +1,5 @@
 from config import *
-import logging
+import vlogging
 
 def supported(extensions, layers):
 
@@ -11,34 +11,34 @@ def supported(extensions, layers):
     #check extension support
     supportedExtensions = [extension.extensionName for extension in vkEnumerateInstanceExtensionProperties(None)]
 
-    logging.logger.print("Device can support the following extensions:")
-    logging.logger.log_list(supportedExtensions)
+    vlogging.logger.print("Device can support the following extensions:")
+    vlogging.logger.log_list(supportedExtensions)
     
     for extension in extensions:
         
         if extension in supportedExtensions:
-            logging.logger.print(f"Extension \"{extension}\" is supported!")
+            vlogging.logger.print(f"Extension \"{extension}\" is supported!")
         else:
-            logging.logger.print(f"Extension \"{extension}\" is not supported!")
+            vlogging.logger.print(f"Extension \"{extension}\" is not supported!")
             return False
 
     #check layer support
     supportedLayers = [layer.layerName for layer in vkEnumerateInstanceLayerProperties()]
 
-    logging.logger.print("Device can support the following layers:")
-    logging.logger.log_list(supportedLayers)
+    vlogging.logger.print("Device can support the following layers:")
+    vlogging.logger.log_list(supportedLayers)
 
     for layer in layers:
         if layer in supportedLayers:
-            logging.logger.print(f"Layer \"{layer}\" is supported!")
+            vlogging.logger.print(f"Layer \"{layer}\" is supported!")
         else:
-            logging.logger.print(f"Layer \"{layer}\" is not supported!")
+            vlogging.logger.print(f"Layer \"{layer}\" is not supported!")
             return False
 
     return True
 
 def make_instance(applicationName):
-    logging.logger.print("Making an instance...")
+    vlogging.logger.print("Making an instance...")
 
     """
         An instance stores all per-application state info, it is a vulkan handle
@@ -54,7 +54,7 @@ def make_instance(applicationName):
     """
     version = vkEnumerateInstanceVersion()
     
-    logging.logger.print(
+    vlogging.logger.print(
         f"System can support vulkan Variant: {version >> 29}\
         , Major: {VK_VERSION_MAJOR(version)}\
         , Minor: {VK_VERSION_MINOR(version)}\
@@ -100,14 +100,14 @@ def make_instance(applicationName):
         in order to interface with vulkan.
     """
     extensions = glfw.get_required_instance_extensions()
-    if logging.logger.debug_mode:
+    if vlogging.logger.debug_mode:
         extensions.append(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
 
-    logging.logger.print("extensions to be requested:")
-    logging.logger.log_list(extensions)
+    vlogging.logger.print("extensions to be requested:")
+    vlogging.logger.log_list(extensions)
     
     layers = []
-    if logging.logger.debug_mode:
+    if vlogging.logger.debug_mode:
         layers.append("VK_LAYER_KHRONOS_validation")
 
     supported(extensions, layers)
@@ -142,5 +142,5 @@ def make_instance(applicationName):
     try:
         return vkCreateInstance(createInfo, None)
     except:
-        logging.logger.print("Failed to create Instance!")
+        vlogging.logger.print("Failed to create Instance!")
         return None

@@ -84,7 +84,7 @@ def make_debug_messenger(instance):
 
 class Logger:
     """
-        Static class for debug logging (printing custom info to the console).
+        Static class for debug vlogging (printing custom info to the console).
     """
 
     def __init__(self):

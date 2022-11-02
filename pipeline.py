@@ -1,6 +1,6 @@
 from config import *
 import shaders
-import logging
+import vlogging
 import mesh
 
 class InputBundle:
@@ -95,7 +95,7 @@ def create_graphics_pipeline(inputBundle):
     )
 
     #vertex shader transforms vertices appropriately
-    logging.logger.print(f"Load shader module: {inputBundle.vertexFilepath}")
+    vlogging.logger.print(f"Load shader module: {inputBundle.vertexFilepath}")
     vertexShaderModule = shaders.create_shader_module(inputBundle.device, inputBundle.vertexFilepath)
     vertexShaderStageInfo = VkPipelineShaderStageCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -149,7 +149,7 @@ def create_graphics_pipeline(inputBundle):
 
     #fragment shader takes fragments from the rasterizer and colours them
     #appropriately
-    logging.logger.print(f"Load shader module: {inputBundle.geometryFilepath}")
+    vlogging.logger.print(f"Load shader module: {inputBundle.geometryFilepath}")
     geometryShaderModule = shaders.create_shader_module(inputBundle.device, inputBundle.geometryFilepath)
     geometryShaderStageInfo = VkPipelineShaderStageCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -168,7 +168,7 @@ def create_graphics_pipeline(inputBundle):
 
     #fragment shader takes fragments from the rasterizer and colours them
     #appropriately
-    logging.logger.print(f"Load shader module: {inputBundle.fragmentFilepath}")
+    vlogging.logger.print(f"Load shader module: {inputBundle.fragmentFilepath}")
     fragmentShaderModule = shaders.create_shader_module(inputBundle.device, inputBundle.fragmentFilepath)
     fragmentShaderStageInfo = VkPipelineShaderStageCreateInfo(
         sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,

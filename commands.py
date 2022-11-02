@@ -1,6 +1,6 @@
 from config import *
 import queue_families
-import logging
+import vlogging
 
 class commandPoolInputChunk:
 
@@ -38,11 +38,11 @@ def make_command_pool(inputChunk):
         commandPool = vkCreateCommandPool(
             inputChunk.device, poolInfo, None
         )
-        logging.logger.print("Created command pool")
+        vlogging.logger.print("Created command pool")
         return commandPool
     except:
 
-        logging.logger.print("Failed to create command pool")
+        vlogging.logger.print("Failed to create command pool")
         return None
 
 def make_frame_command_buffers(inputChunk: commandbufferInputChunk) -> None:
@@ -66,9 +66,9 @@ def make_frame_command_buffers(inputChunk: commandbufferInputChunk) -> None:
         try:
             frame.commandbuffer = vkAllocateCommandBuffers(inputChunk.device, allocInfo)[0]
 
-            logging.logger.print(f"Allocated command buffer for frame {i}")
+            vlogging.logger.print(f"Allocated command buffer for frame {i}")
         except:
-            logging.logger.print(f"Failed to allocate command buffer for frame {i}")
+            vlogging.logger.print(f"Failed to allocate command buffer for frame {i}")
 
 def make_command_buffer(inputChunk):
 
@@ -89,10 +89,10 @@ def make_command_buffer(inputChunk):
     try:
         commandbuffer = vkAllocateCommandBuffers(inputChunk.device, allocInfo)[0]
 
-        logging.logger.print("Allocated main command buffer")
+        vlogging.logger.print("Allocated main command buffer")
         
         return commandbuffer
     except:
-        logging.logger.print("Failed to allocate main command buffer")
+        vlogging.logger.print("Failed to allocate main command buffer")
         
         return None
