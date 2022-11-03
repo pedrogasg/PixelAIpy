@@ -39,6 +39,7 @@ class Scene:
             self.world_state = np.ones((height, width), dtype=int) # np.random.choice([0,1],(height,width), p=[0.1,0.9])
             xs, ys = np.where(self.world_state == 1)
             self.agent = [xs[0],ys[0]]
+            self.goals = [(0,0)]
         else:
             world_state = np.ones((height, width), dtype=int)
             world_state[np.where(state == 0)] = 0
@@ -46,12 +47,17 @@ class Scene:
             xs, ys = np.where(state == -1)
             self.agent = [xs[0],ys[0]]
             self.update_vertices(state,2,5)
+            xs, ys = np.where(state == 1)
+            self.goals =  [(x, y) for x, y in zip(xs,ys)]
+
         self.painted_state = np.copy(self.world_state)
         self.world_actions = np.pad(self.world_state,1)
 
         self.update_vertices(self.world_state, 0, 4)
             
         self.push_constant_size = len(self.push_constant[0])
+
+        self.movement_set = { 'down':self.move_down, 'up':self.move_up, 'left':self.move_left, 'right':self.move_right}
 
     @property
     def actions(self):
@@ -76,7 +82,16 @@ class Scene:
         #self.world_actions[state[0]+1,state[1]+1] = 0
         self.vertices[position + 5] = 1
         self.dirty = True
-    
+
+    def get_goals(self):
+        return self.goals
+
+    def get_neighbors(self, vertice):
+        indices = ((vertice[0],vertice[0]+2,vertice[0]+1,vertice[0]+1),(vertice[1]+1,vertice[1]+1,vertice[1],vertice[1]+2))
+        actions = self.world_actions[indices]
+        indices = ((vertice[0]-1,vertice[0]+1,vertice[0],vertice[0]),(vertice[1],vertice[1],vertice[1]-1,vertice[1]+1))
+        moves = 'up', 'down', 'left', 'right'
+        return [((i,j),m) for i, j, a, m in zip(indices[0], indices[1], actions, moves) if a > 0]
 
     def move_right(self):
         self.agent = [self.agent[0], self.agent[1] + self.actions[3]]
@@ -89,6 +104,10 @@ class Scene:
 
     def move_down(self):
         self.agent = [self.agent[0] + self.actions[1], self.agent[1]]
+    
+    def direction_move(self, direction):
+        if direction in self.movement_set:
+            self.movement_set[direction]()
 
     def random_move(self):
         movent_set = [self.move_down, self.move_up, self.move_left, self.move_right]

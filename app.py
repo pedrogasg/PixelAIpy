@@ -76,9 +76,29 @@ class App:
             self.scene.move_left()
         elif glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
             self.scene.move_right()
+
+    def depthFirstSearch(self, scene):
+        """
+        Search the deepest nodes in the search tree first.
+        """
+        i,j = scene.agent
+        goal = scene.get_goals()[0]
+        stack = []
+        stack.append(((i,j), []))
+        visited = set()
+        while stack:
+            (vertex, path) = stack.pop()
+            
+            if vertex not in visited:
+                if goal[0] == vertex[0] and goal[1] == vertex[1]:
+                    return path
+                visited.add(vertex)
+                for neighbor in scene.get_neighbors(vertex):
+                    stack.append((neighbor[0], path + [neighbor[1]]))
             
     async def run(self):
-
+        xpath = self.depthFirstSearch(self.scene)
+        path = self.path(xpath)
         while not glfw.window_should_close(self.window):
 
             glfw.wait_events()
@@ -86,8 +106,18 @@ class App:
             self.scene.add_state(self.scene.agent)
             self.graphicsEngine.render()
             self.calculate_framerate()
-            await self.random_move()
+            await self.move(next(path))
+
+    def path(self, array):
+        while array:
+            yield array.pop(0)
+        while True:
+            yield 'x'
             
+    async def move(self, direction):
+        self.scene.direction_move(direction)
+        await asyncio.sleep(0.15)
+        glfw.post_empty_event()
 
     async def random_move(self):
         self.scene.random_move()
