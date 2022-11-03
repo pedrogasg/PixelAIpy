@@ -12,7 +12,13 @@ class App:
 
         self.build_glfw_window(width, height)
 
-        self.scene = scene.Scene(24,24)
+        #self.scene = scene.Scene.from_layout('./layouts/tiny_maze.npy')
+
+        #self.scene = scene.Scene.from_layout('./layouts/medium_maze.npy')
+
+        self.scene = scene.Scene.from_layout('./layouts/big_maze.npy')
+
+        #self.scene = scene.Scene(5,10)
 
         self.graphicsEngine = engine.Engine(width, height, self.window, self.scene)
 
