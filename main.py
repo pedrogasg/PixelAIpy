@@ -1,12 +1,12 @@
-import app
-import agent
+from app import App
+from agent import OneGoalAgent, Agent
 
 import asyncio
 
 async def main():
     shutdown_event = asyncio.Event()
-    myApp = app.App(800, 800, True)
-    a = agent.Agent(shutdown_event)
+    myApp = App(800, 800, True)
+    a = OneGoalAgent(shutdown_event)
     await asyncio.gather(
         myApp.run(shutdown_event),
         a.interact(myApp.scene),
