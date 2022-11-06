@@ -1,8 +1,8 @@
 from config import *
-import queue_families
-import vlogging
+from render import find_queue_families
+from vlogging import logger
 
-class commandPoolInputChunk:
+class CommandPoolInputChunk:
 
 
     def __init__(self):
@@ -12,7 +12,7 @@ class commandPoolInputChunk:
         self.surface = None
         self.instance = None
 
-class commandbufferInputChunk:
+class CommandbufferInputChunk:
 
 
     def __init__(self):
@@ -23,7 +23,7 @@ class commandbufferInputChunk:
 
 def make_command_pool(inputChunk):
 
-    queueFamilyIndices = queue_families.find_queue_families(
+    queueFamilyIndices = find_queue_families(
         device = inputChunk.physicalDevice,
         instance = inputChunk.instance,
         surface = inputChunk.surface,
@@ -38,14 +38,14 @@ def make_command_pool(inputChunk):
         commandPool = vkCreateCommandPool(
             inputChunk.device, poolInfo, None
         )
-        vlogging.logger.print("Created command pool")
+        logger.print("Created command pool")
         return commandPool
     except:
 
-        vlogging.logger.print("Failed to create command pool")
+        logger.print("Failed to create command pool")
         return None
 
-def make_frame_command_buffers(inputChunk: commandbufferInputChunk) -> None:
+def make_frame_command_buffers(inputChunk: CommandbufferInputChunk) -> None:
     """
         Make command buffers for each frame.
 
@@ -66,9 +66,9 @@ def make_frame_command_buffers(inputChunk: commandbufferInputChunk) -> None:
         try:
             frame.commandbuffer = vkAllocateCommandBuffers(inputChunk.device, allocInfo)[0]
 
-            vlogging.logger.print(f"Allocated command buffer for frame {i}")
+            logger.print(f"Allocated command buffer for frame {i}")
         except:
-            vlogging.logger.print(f"Failed to allocate command buffer for frame {i}")
+            logger.print(f"Failed to allocate command buffer for frame {i}")
 
 def make_command_buffer(inputChunk):
 
@@ -89,10 +89,10 @@ def make_command_buffer(inputChunk):
     try:
         commandbuffer = vkAllocateCommandBuffers(inputChunk.device, allocInfo)[0]
 
-        vlogging.logger.print("Allocated main command buffer")
+        logger.print("Allocated main command buffer")
         
         return commandbuffer
     except:
-        vlogging.logger.print("Failed to allocate main command buffer")
+        logger.print("Failed to allocate main command buffer")
         
         return None

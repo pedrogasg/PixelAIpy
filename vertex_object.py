@@ -1,7 +1,7 @@
 from config import *
 import memory
 
-class VertexBufferFinalizationChunk:
+class VertexBufferFinalizationStruct:
 
     
     def __init__(self):
@@ -11,7 +11,7 @@ class VertexBufferFinalizationChunk:
         self.command_buffer = None
         self.queue = None
 
-class VertexMenagerie:
+class VertexObject:
 
     
     def __init__(self):
@@ -57,9 +57,9 @@ class VertexMenagerie:
         return staging_buffer
 
     def update(self, finalization_chunk):
-        input_chunk = VertexMenagerie._input_for_staging(self.lump, finalization_chunk)
+        input_chunk = VertexObject._input_for_staging(self.lump, finalization_chunk)
 
-        staging_buffer = VertexMenagerie._create_staging_buffer(self.lump, input_chunk, finalization_chunk)
+        staging_buffer = VertexObject._create_staging_buffer(self.lump, input_chunk, finalization_chunk)
 
         memory.copy_buffer(
             src_buffer = staging_buffer, dst_buffer = self.vertex_buffer,
@@ -67,15 +67,15 @@ class VertexMenagerie:
             command_buffer = finalization_chunk.command_buffer
         )
 
-        VertexMenagerie._destroy_buffer(self.logical_device, staging_buffer)
+        VertexObject._destroy_buffer(self.logical_device, staging_buffer)
     
     def finalize(self, finalization_chunk):
 
         self.logical_device = finalization_chunk.logical_device
 
-        input_chunk = VertexMenagerie._input_for_staging(self.lump, finalization_chunk)
+        input_chunk = VertexObject._input_for_staging(self.lump, finalization_chunk)
 
-        staging_buffer = VertexMenagerie._create_staging_buffer(self.lump, input_chunk, finalization_chunk)
+        staging_buffer = VertexObject._create_staging_buffer(self.lump, input_chunk, finalization_chunk)
 
         input_chunk.usage = \
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
@@ -88,7 +88,7 @@ class VertexMenagerie:
             command_buffer = finalization_chunk.command_buffer
         )
 
-        VertexMenagerie._destroy_buffer(self.logical_device, staging_buffer)
+        VertexObject._destroy_buffer(self.logical_device, staging_buffer)
 
     @classmethod
     def _destroy_buffer(cls, logical_device, buffer):
@@ -102,4 +102,4 @@ class VertexMenagerie:
         )
     
     def destroy(self):
-        VertexMenagerie._destroy_buffer(self.logical_device, self.vertex_buffer)
+        VertexObject._destroy_buffer(self.logical_device, self.vertex_buffer)

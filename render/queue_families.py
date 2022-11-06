@@ -1,5 +1,5 @@
 from config import *
-import vlogging
+from vlogging import logger
 
 class QueueFamilyIndices:
 
@@ -21,7 +21,7 @@ def find_queue_families(device, instance, surface):
 
     queueFamilies = vkGetPhysicalDeviceQueueFamilyProperties(device)
 
-    vlogging.logger.print(
+    logger.print(
         f"There are {len(queueFamilies)} queue families available on the system."
     )
 
@@ -59,11 +59,11 @@ def find_queue_families(device, instance, surface):
 
         if queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT:
             indices.graphicsFamily = i
-            vlogging.logger.print(f"Queue Family {i} is suitable for graphics")
+            logger.print(f"Queue Family {i} is suitable for graphics")
         
         if surfaceSupport(device, i, surface):
             indices.presentFamily = i
-            vlogging.logger.print(f"Queue Family {i} is suitable for presenting")
+            logger.print(f"Queue Family {i} is suitable for presenting")
 
         if indices.is_complete():
             break

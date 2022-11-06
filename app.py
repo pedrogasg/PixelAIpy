@@ -1,5 +1,5 @@
 from config import *
-import engine
+from render import Engine
 import scene
 import vlogging
 
@@ -20,7 +20,7 @@ class App:
 
         #self.scene = scene.Scene(5,10)
 
-        self.graphicsEngine = engine.Engine(width, height, self.window, self.scene)
+        self.graphicsEngine = Engine(width, height, self.window, self.scene)
 
         self.lastTime = glfw.get_time()
         self.currentTime = glfw.get_time()

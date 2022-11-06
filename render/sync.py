@@ -1,5 +1,5 @@
 from config import *
-import vlogging
+from vlogging import logger
 
 def make_semaphore(device):
 
@@ -11,7 +11,7 @@ def make_semaphore(device):
     
     except:
 
-        vlogging.logger.print("Failed to create semaphore")
+        logger.print("Failed to create semaphore")
         
         return None
 
@@ -27,6 +27,6 @@ def make_fence(device):
     
     except:
 
-        vlogging.logger.print("Failed to create fence")
+        logger.print("Failed to create fence")
         
         return None

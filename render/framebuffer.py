@@ -1,7 +1,7 @@
 from config import *
 import vlogging
 
-class framebufferInput:
+class FramebufferInput:
 
 
     def __init__(self):

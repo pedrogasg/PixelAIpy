@@ -1,6 +1,6 @@
 from config import *
-import vlogging
-import queue_families
+from vlogging import logger
+from render import find_queue_families
 
 """
     Vulkan separates the concept of physical and logical devices. 
@@ -24,8 +24,8 @@ def check_device_extension_support(device, requestedExtensions):
         for extension in vkEnumerateDeviceExtensionProperties(device, None)
     ]
 
-    vlogging.logger.print("Device can support extensions:")
-    vlogging.logger.log_list(supportedExtensions)
+    logger.print("Device can support extensions:")
+    logger.log_list(supportedExtensions)
 
     for extension in requestedExtensions:
         if extension not in supportedExtensions:
@@ -35,7 +35,7 @@ def check_device_extension_support(device, requestedExtensions):
 
 def is_suitable(device):
 
-    vlogging.logger.print("Checking if device is suitable")
+    logger.print("Checking if device is suitable")
 
     """
         A device is suitable if it can present to the screen, ie support
@@ -45,15 +45,15 @@ def is_suitable(device):
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
     ]
 
-    vlogging.logger.print("We are requesting device extensions:")
-    vlogging.logger.log_list(requestedExtensions)
+    logger.print("We are requesting device extensions:")
+    logger.log_list(requestedExtensions)
 
     if check_device_extension_support(device, requestedExtensions):
 
-        vlogging.logger.print("Device can support the requested extensions!")
+        logger.print("Device can support the requested extensions!")
         return True
     
-    vlogging.logger.print("Device can't support the requested extensions!")
+    logger.print("Device can't support the requested extensions!")
 
     return False
 
@@ -66,20 +66,20 @@ def choose_physical_device(instance):
         independently to the program.
     """
 
-    vlogging.logger.print("Choosing Physical Device")
+    logger.print("Choosing Physical Device")
 
     """
         vkEnumeratePhysicalDevices(instance) -> List(vkPhysicalDevice)
     """
     availableDevices = vkEnumeratePhysicalDevices(instance)
 
-    vlogging.logger.print(
+    logger.print(
         f"There are {len(availableDevices)} physical devices available on this system"
     )
 
     # check if a suitable device can be found
     for device in availableDevices:
-        vlogging.logger.log_device_properties(device)
+        logger.log_device_properties(device)
         if is_suitable(device):
             return device
 
@@ -95,7 +95,7 @@ def create_logical_device(physicalDevice, instance, surface):
         At time of creation, any required queues will also be created,
         so queue create info must be passed in
     """
-    indices = queue_families.find_queue_families(physicalDevice, instance, surface)
+    indices = find_queue_families(physicalDevice, instance, surface)
     uniqueIndices = [indices.graphicsFamily,]
     if indices.graphicsFamily != indices.presentFamily:
         uniqueIndices.append(indices.presentFamily)
@@ -119,7 +119,7 @@ def create_logical_device(physicalDevice, instance, surface):
         geometryShader = VK_TRUE)
 
     enabledLayers = []
-    if vlogging.logger.debug_mode:
+    if logger.debug_mode:
         enabledLayers.append("VK_LAYER_KHRONOS_validation")
     
     deviceExtensions = [
@@ -142,7 +142,7 @@ def create_logical_device(physicalDevice, instance, surface):
 
 def get_queues(physicalDevice, logicalDevice, instance, surface):
 
-    indices = queue_families.find_queue_families(physicalDevice, instance, surface)
+    indices = find_queue_families(physicalDevice, instance, surface)
     return [
         vkGetDeviceQueue(
             device = logicalDevice,

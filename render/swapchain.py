@@ -1,7 +1,18 @@
 from config import *
-import vlogging
-import queue_families
-import frame
+from vlogging import logger
+from render import find_queue_families
+
+class SwapChainFrame:
+
+    def __init__(self):
+        
+        self.image = None
+        self.image_view = None
+        self.framebuffer = None
+        self.commandbuffer = None
+        self.inFlight = None
+        self.imageAvailable = None
+        self.renderFinished = None
 
 class SwapChainSupportDetails:
 
@@ -45,7 +56,7 @@ def query_swapchain_support(instance, physicalDevice, surface):
     )
     support.capabilities = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface)
     
-    vlogging.logger.log_surface_capabilities(support)
+    logger.log_surface_capabilities(support)
 
     vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(
         instance, 'vkGetPhysicalDeviceSurfaceFormatsKHR'
@@ -53,14 +64,14 @@ def query_swapchain_support(instance, physicalDevice, surface):
     support.formats = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface)
 
     for supportedFormat in support.formats:
-        vlogging.logger.log_surface_format(supportedFormat)
+        logger.log_surface_format(supportedFormat)
 
     vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(
         instance, 'vkGetPhysicalDeviceSurfacePresentModesKHR'
     )
     support.presentModes = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface)
 
-    vlogging.logger.log_list(support.presentModes)
+    logger.log_list(support.presentModes)
 
     return support
 
@@ -132,7 +143,7 @@ def create_swapchain(instance, logicalDevice, physicalDevice, surface, width, he
         ) VULKAN_HPP_NOEXCEPT
     """
 
-    indices = queue_families.find_queue_families(physicalDevice, instance, surface)
+    indices = find_queue_families(physicalDevice, instance, surface)
     queueFamilyIndices = [
         indices.graphicsFamily, indices.presentFamily
     ]
@@ -183,7 +194,7 @@ def create_swapchain(instance, logicalDevice, physicalDevice, surface, width, he
             subresourceRange = subresourceRange
         )
 
-        swapchain_frame = frame.SwapChainFrame()
+        swapchain_frame = SwapChainFrame()
         swapchain_frame.image = image
         swapchain_frame.image_view = vkCreateImageView(
             device = logicalDevice, pCreateInfo = create_info, pAllocator = None
