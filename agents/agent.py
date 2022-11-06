@@ -8,9 +8,12 @@ class Agent:
     algorithm for a supplied search problem, then play the path in the given scene
     """
 
-    def __init__(self, shutdown, fn=depthFirstSearch) -> None:
+    def __init__(self, shutdown, fn=depthFirstSearch, heur=None) -> None:
         self.shutdown = shutdown
-        self.fn = fn
+        if heur is not None:
+            self.fn = lambda x: fn(x, heur)
+        else:
+            self.fn = fn
         self.search = Search()
 
     def path(self, array):

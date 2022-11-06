@@ -16,7 +16,7 @@ class App:
 
         #self.scene = scene.Scene.from_layout('./layouts/medium_maze.npy')
 
-        self.scene = scene.Scene.from_layout('./layouts/big_maze.npy')
+        self.scene = scene.Scene.from_layout('./layouts/openMaze.npy')
 
         #self.scene = scene.Scene(5,10)
 
