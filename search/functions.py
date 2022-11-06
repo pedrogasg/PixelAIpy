@@ -6,16 +6,17 @@ def depthFirstSearch(search:Search):
     """
     start = search.start()
     stack = []
-    stack.append((start, []))
+    stack.append((start, [], 0))
     visited = set()
+    print("We are figthing heros")
     while stack:
-        (vertex, path) = stack.pop()
+        (vertex, path, cost) = stack.pop()
         if vertex not in visited:
             if search.goal_reached(vertex):
                 return path
             visited.add(vertex)
-            for neighbor in search.get_neighbors(vertex):
-                stack.append((neighbor[0], path + [neighbor[1]]))
+            for neighbor, direction, n_cost in search.get_neighbors(vertex):
+                stack.append((neighbor, path + [direction], cost + n_cost))
 
 def breadthFirstSearch(search:Search):
     """
@@ -23,14 +24,14 @@ def breadthFirstSearch(search:Search):
     """
     start = search.start()
     queue =[]
-    queue.append((start, []))
+    queue.append((start, [], 0))
     visited = set()
     while queue:
-        (vertex, path) = queue.pop(0)
+        (vertex, path, cost) = queue.pop(0)
         if vertex not in visited:
             if search.goal_reached(vertex):
                 return path
             visited.add(vertex)
-            for neighbor in search.get_neighbors(vertex):
-                if neighbor[0] not in visited:
-                    queue.append((neighbor[0], path + [neighbor[1]]))
+            for neighbor, direction, n_cost in search.get_neighbors(vertex):
+                if neighbor not in visited:
+                    queue.append((neighbor, path + [direction], cost + n_cost))

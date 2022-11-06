@@ -1,5 +1,5 @@
 from app import App
-from agent import OneGoalAgent, Agent
+from agents import OneGoalAgent
 
 import asyncio
 
