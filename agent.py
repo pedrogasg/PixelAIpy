@@ -47,9 +47,10 @@ class Agent:
         visited = set()
         while queue:
             (vertex, path) = queue.pop(0)
-            if goal[0] == vertex[0] and goal[1] == vertex[1]:
-                return path
-            for neighbor in scene.get_neighbors(vertex):
-                if neighbor[0] not in visited:
-                    visited.add(neighbor[0])
-                    queue.append((neighbor[0], path + [neighbor[1]]))
+            if vertex not in visited:
+                if goal[0] == vertex[0] and goal[1] == vertex[1]:
+                    return path
+                visited.add(vertex)
+                for neighbor in scene.get_neighbors(vertex):
+                    if neighbor[0] not in visited:
+                        queue.append((neighbor[0], path + [neighbor[1]]))

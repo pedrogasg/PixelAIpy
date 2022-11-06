@@ -37,20 +37,22 @@ class Scene:
         self.width = width
         if state is None:
             self.world_state = np.ones((height, width), dtype=int) # np.random.choice([0,1],(height,width), p=[0.1,0.9])
+            self.painted_state = np.copy(self.world_state)
             xs, ys = np.where(self.world_state == 1)
             self.agent = [xs[0],ys[0]]
-            self.goals = [(0,0)]
+            self.goals =  [(x, y) for x, y in zip(xs,ys)]
         else:
             world_state = np.ones((height, width), dtype=int)
             world_state[np.where(state == 0)] = 0
             self.world_state = world_state
+            self.painted_state = np.copy(self.world_state)
             xs, ys = np.where(state == -1)
             self.agent = [xs[0],ys[0]]
-            self.update_vertices(state,2,5)
+            self.update_vertices(state, 2, 5, self.painted_state)
             xs, ys = np.where(state == 1)
             self.goals =  [(x, y) for x, y in zip(xs,ys)]
 
-        self.painted_state = np.copy(self.world_state)
+            
         self.world_actions = np.pad(self.world_state,1)
 
         self.update_vertices(self.world_state, 0, 4)
@@ -69,11 +71,13 @@ class Scene:
     def push_constant(self):
         return [self.color + self.agent + self.size]
 
-    def update_vertices(self, world_state, lookfor, offset):
+    def update_vertices(self, world_state, lookfor, offset, with_state=None):
         xs, ys = np.where(world_state == lookfor)
         for x, y in zip(xs, ys):
             position = (((x * self.width)) + y) * self.vertex_size
             self.vertices[position + offset] = 1
+        if with_state is not None:
+            with_state[(xs, ys)] = 0
 
     def add_state(self, state):
         position = (((state[0] * self.width)) + state[1]) * self.vertex_size
@@ -84,7 +88,8 @@ class Scene:
         self.dirty = True
 
     def get_goals(self):
-        return self.goals
+        xs, ys = np.where(self.painted_state == 1) 
+        return [(x, y) for x, y in zip(xs,ys)]
 
     def get_neighbors(self, vertice):
         indices = ((vertice[0],vertice[0]+2,vertice[0]+1,vertice[0]+1),(vertice[1]+1,vertice[1]+1,vertice[1],vertice[1]+2))
