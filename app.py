@@ -11,7 +11,7 @@ class App:
 
         vlogging.logger.set_debug_mode(debugMode)
 
-        self.scene = scene.Scene.from_layout('./layouts/mediumDottedMaze.npy')
+        self.scene = scene.Scene.from_layout('./layouts/bigSearch.npy')
         max_scene = max(self.scene.height, self.scene.width)
         max_window = max(height, width)
         denominator = max_window // max_scene

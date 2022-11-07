@@ -9,7 +9,6 @@ def depthFirstSearch(search:Search):
     stack = Stack()
     stack.push((start, [], 0))
     visited = set()
-    print("We are figthing heros")
     while stack:
         (vertex, path, cost) = stack.pop()
         if vertex not in visited:
@@ -38,7 +37,9 @@ def breadthFirstSearch(search:Search):
                     queue.push((neighbor, path + [direction], cost + n_cost))
 
 def uniformCostSearch(search:Search):
-    """Search the node of least total cost first."""
+    """
+    Search the node of least total cost first.
+    """
     start = search.start()
     queue = PriorityQueue()
     queue.push((start,[], 0),1)
@@ -54,7 +55,9 @@ def uniformCostSearch(search:Search):
                     queue.push((neighbor, path + [direction], cost + n_cost), cost + n_cost)
 
 def aStarSearch(search:Search, heuristic=lambda x,s: 0):
-    """Search the node that has the lowest combined cost and heuristic first."""
+    """
+    Search the node that has the lowest combined cost and heuristic first.
+    """
     start = search.start()
     queue = PriorityQueue()
     queue.push((start,[], 0),1)
