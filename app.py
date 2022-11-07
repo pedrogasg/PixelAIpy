@@ -1,5 +1,6 @@
 from config import *
 from render import Engine
+import math
 import scene
 import vlogging
 
@@ -10,15 +11,13 @@ class App:
 
         vlogging.logger.set_debug_mode(debugMode)
 
+        self.scene = scene.Scene.from_layout('./layouts/mediumDottedMaze.npy')
+        max_scene = max(self.scene.height, self.scene.width)
+        max_window = max(height, width)
+        denominator = max_window // max_scene
+        height = int(self.scene.height * denominator)
+        width = int(self.scene.width * denominator)
         self.build_glfw_window(width, height)
-
-        #self.scene = scene.Scene.from_layout('./layouts/tiny_maze.npy')
-
-        #self.scene = scene.Scene.from_layout('./layouts/medium_maze.npy')
-
-        self.scene = scene.Scene.from_layout('./layouts/openMaze.npy')
-
-        #self.scene = scene.Scene(5,10)
 
         self.graphicsEngine = Engine(width, height, self.window, self.scene)
 

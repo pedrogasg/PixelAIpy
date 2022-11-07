@@ -36,7 +36,7 @@ class Scene:
         self.height = height
         self.width = width
         if state is None:
-            self.world_state = np.ones((height, width), dtype=int) # np.random.choice([0,1],(height,width), p=[0.1,0.9])
+            self.world_state = np.random.choice([0,1],(height,width), p=[0.15,0.85]) # np.ones((height, width), dtype=int) # np.random.choice([0,1],(height,width), p=[0.1,0.9])
             self.painted_state = np.copy(self.world_state)
             xs, ys = np.where(self.world_state == 1)
             self.agent = [xs[0],ys[0]]
