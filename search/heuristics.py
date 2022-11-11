@@ -3,6 +3,8 @@ from bitarray.util import int2ba
 
 nullHeuristic = lambda p, s: 0
 
+noneHeuristic = None
+
 def manhattanHeuristic(position, search:SingleSearch, info={}):
     "The Manhattan distance heuristic for a PositionSearchProblem"
     xy1 = position

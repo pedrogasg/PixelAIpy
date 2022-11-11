@@ -1,4 +1,5 @@
 from config import *
+from absl import logging
 import os
 
 def debugCallback(*args):
@@ -42,7 +43,7 @@ def debugCallback(*args):
 
     """
 
-    print(f"Validation Layer: {args[5]} {args[6]}")
+    logging.debug(f"Validation Layer: {args[5]} {args[6]}")
     return 0
 
 def make_debug_messenger(instance):
@@ -445,14 +446,14 @@ class Logger:
         VkDeviceSize          nonCoherentAtomSize;
     } VkPhysicalDeviceLimits;
         """
-        print("Physical Device Limits:")
-        print(f"\tMaximum 1D Image Size: {limits.maxImageDimension1D}")
-        print(f"\tMaximum 2D Image Size: {limits.maxImageDimension2D}")
-        print(f"\tMaximum 3D Image Size: {limits.maxImageDimension3D}")
-        print(f"\tMaximum 2D Cube Image Size: {limits.maxImageDimensionCube}")
-        print(f"\tMaximum Image Array Layers: {limits.maxImageArrayLayers}")
-        print(f"\tMaximum Descriptor Sets per stage: {limits.maxBoundDescriptorSets}")
-        print(f"\tMaximum Sampler Descriptors per stage: {limits.maxPerStageDescriptorSamplers}")
+        logging.debug("Physical Device Limits:")
+        logging.debug(f"\tMaximum 1D Image Size: {limits.maxImageDimension1D}")
+        logging.debug(f"\tMaximum 2D Image Size: {limits.maxImageDimension2D}")
+        logging.debug(f"\tMaximum 3D Image Size: {limits.maxImageDimension3D}")
+        logging.debug(f"\tMaximum 2D Cube Image Size: {limits.maxImageDimensionCube}")
+        logging.debug(f"\tMaximum Image Array Layers: {limits.maxImageArrayLayers}")
+        logging.debug(f"\tMaximum Descriptor Sets per stage: {limits.maxBoundDescriptorSets}")
+        logging.debug(f"\tMaximum Sampler Descriptors per stage: {limits.maxPerStageDescriptorSamplers}")
 
     def log_device_properties(self, device) -> None:
         """
@@ -490,30 +491,30 @@ class Logger:
         """
 
         variant, major, minor, patch = self._extract_version_number(properties.apiVersion)
-        print(f"Device API version: Variant: {variant}, Major: {major}, Minor: {minor}, Patch: {patch}")
+        logging.debug(f"Device API version: Variant: {variant}, Major: {major}, Minor: {minor}, Patch: {patch}")
 
         # driverVersion: convention as to how driver numbers are packed is vendor-specific
         if (properties.vendorID == 4318):
-            print("----Nvidia Card Detected----")
+            logging.debug("----Nvidia Card Detected----")
             driver_version = self._extract_driver_version_nvidia(properties.driverVersion)
         elif (os.name == "nt" and properties.vendorID == 0x8086):
-            print("----Intel Windows Detected----")
+            logging.debug("----Intel Windows Detected----")
             driver_version = self._extract_driver_version_intel(properties.driverVersion)
         else:
-            print("----Fallback to standard Vulkan Versioning----")
+            logging.debug("----Fallback to standard Vulkan Versioning----")
             driver_version = self._extract_driver_version_standard(properties.driverVersion)
-        print(f"Device driver version: {driver_version}")
+        logging.debug(f"Device driver version: {driver_version}")
 
         if properties.deviceType in self.physical_device_types:
-            print("Device type: ",end="")
-            print(self.physical_device_types[properties.deviceType])
+            logging.debug("Device type: ")
+            logging.debug(self.physical_device_types[properties.deviceType])
         
-        print(f"Device name: {properties.deviceName}")
+        logging.debug(f"Device name: {properties.deviceName}")
 
-        print("Pipline cache Universally Unique ID: ", end="")
+        logging.debug("Pipline cache Universally Unique ID: ")
         for byte in properties.pipelineCacheUUID:
-            print(byte, end=" ")
-        print()
+            logging.debug(byte)
+  
 
         self._log_physical_device_limits(properties.limits)
 
@@ -695,7 +696,7 @@ class Logger:
         if not self.debug_mode:
             return
 
-        print(message)
+        logging.debug(message)
     
     def log_list(self, items: list[str]) -> None:
         """
@@ -706,7 +707,7 @@ class Logger:
             return
 
         for item in items:
-            print(f"\t\"{item}\"")
+            logging.debug(f"\t\"{item}\"")
     
     def log_surface_capabilities(self, support) -> None:
         """
@@ -720,51 +721,51 @@ class Logger:
             return
 
 
-        print("Swapchain can support the following surface capabilities:")
+        logging.debug("Swapchain can support the following surface capabilities:")
 
-        print(f"\tminimum image count: {support.capabilities.minImageCount}")
-        print(f"\tmaximum image count: {support.capabilities.maxImageCount}")
+        logging.debug(f"\tminimum image count: {support.capabilities.minImageCount}")
+        logging.debug(f"\tmaximum image count: {support.capabilities.maxImageCount}")
 
-        print("\tcurrent extent:")
+        logging.debug("\tcurrent extent:")
         """
         typedef struct VkExtent2D {
             uint32_t    width;
             uint32_t    height;
         } VkExtent2D;
         """
-        print(f"\t\twidth: {support.capabilities.currentExtent.width}")
-        print(f"\t\theight: {support.capabilities.currentExtent.height}")
+        logging.debug(f"\t\twidth: {support.capabilities.currentExtent.width}")
+        logging.debug(f"\t\theight: {support.capabilities.currentExtent.height}")
 
-        print("\tminimum supported extent:")
-        print(f"\t\twidth: {support.capabilities.minImageExtent.width}")
-        print(f"\t\theight: {support.capabilities.minImageExtent.height}")
+        logging.debug("\tminimum supported extent:")
+        logging.debug(f"\t\twidth: {support.capabilities.minImageExtent.width}")
+        logging.debug(f"\t\theight: {support.capabilities.minImageExtent.height}")
 
-        print("\tmaximum supported extent:")
-        print(f"\t\twidth: {support.capabilities.maxImageExtent.width}")
-        print(f"\t\theight: {support.capabilities.maxImageExtent.height}")
+        logging.debug("\tmaximum supported extent:")
+        logging.debug(f"\t\twidth: {support.capabilities.maxImageExtent.width}")
+        logging.debug(f"\t\theight: {support.capabilities.maxImageExtent.height}")
 
-        print(f"\tmaximum image array layers: {support.capabilities.maxImageArrayLayers}")
+        logging.debug(f"\tmaximum image array layers: {support.capabilities.maxImageArrayLayers}")
 
             
-        print("\tsupported transforms:")
+        logging.debug("\tsupported transforms:")
         stringList = self._log_transform_bits(support.capabilities.supportedTransforms)
         for line in stringList:
-            print(f"\t\t{line}")
+            logging.debug(f"\t\t{line}")
 
-        print("\tcurrent transform:")
+        logging.debug("\tcurrent transform:")
         stringList = self._log_transform_bits(support.capabilities.currentTransform)
         for line in stringList:
-            print(f"\t\t{line}")
+            logging.debug(f"\t\t{line}")
 
-        print("\tsupported alpha operations:")
+        logging.debug("\tsupported alpha operations:")
         stringList = self._log_alpha_composite_bits(support.capabilities.supportedCompositeAlpha)
         for line in stringList:
-            print(f"\t\t{line}")
+            logging.debug(f"\t\t{line}")
 
-        print("\tsupported image usage:")
+        logging.debug("\tsupported image usage:")
         stringList = self._log_image_usage_bits(support.capabilities.supportedUsageFlags)
         for line in stringList:
-            print(f"\t\t{line}")
+            logging.debug(f"\t\t{line}")
     
     def log_surface_format(self, surface_format) -> None:
         """
@@ -784,8 +785,8 @@ class Logger:
             } VkSurfaceFormatKHR;
         """
 
-        print(f"supported pixel format: {self.format_lookup[surface_format.format]}")
-        print(f"supported color space: {self.colorspace_lookup[surface_format.colorSpace]}")
+        logging.debug(f"supported pixel format: {self.format_lookup[surface_format.format]}")
+        logging.debug(f"supported color space: {self.colorspace_lookup[surface_format.colorSpace]}")
 
     
 logger = Logger()

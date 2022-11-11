@@ -4,14 +4,14 @@ import math
 import scene
 import vlogging
 
-class App:
+class Sim:
 
 
-    def __init__(self, width, height, debugMode):
+    def __init__(self, width, height, debugMode, layout):
 
         vlogging.logger.set_debug_mode(debugMode)
 
-        self.scene = scene.Scene.from_layout('./layouts/bigSearch.npy')
+        self.scene = scene.Scene.from_layout(layout)
         max_scene = max(self.scene.height, self.scene.width)
         max_window = max(height, width)
         denominator = max_window // max_scene

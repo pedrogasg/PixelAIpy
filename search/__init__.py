@@ -12,6 +12,7 @@ from .functions import (
 from .heuristics import (
     manhattanHeuristic,
     euclideanHeuristic,
+    noneHeuristic,
     nullHeuristic,
     unPaintedInconsistentHeuristic,
 )

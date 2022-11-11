@@ -1,35 +1,36 @@
-from app import App
-from agents import OneGoalAgent, UnpaintedAgent, AnyAgent
-from search import (
-    breadthFirstSearch,
-    depthFirstSearch,
-    uniformCostSearch,
-    greedySearch,
-    aStarSearch,
-    manhattanHeuristic,
-    unPaintedInconsistentHeuristic
-)
-
-
+import agents
+import search
 import asyncio
+from sim import Sim
+from absl import app
+from absl import flags
+from absl import logging
 
+FLAGS = flags.FLAGS
 
-async def main():
+flags.DEFINE_integer("width", 1000, "The width size of the window")
+flags.DEFINE_integer("height", 1000, "The height size of the window")
+flags.DEFINE_string("layout", "smallMaze.npy", "The layout to launch")
+flags.DEFINE_string("agent", "OneGoalAgent", "The name of the class of agent")
+flags.DEFINE_string("function", "breadthFirstSearch", "The search function used by the agent")
+flags.DEFINE_string("heuristic", "noneHeuristic", "An heuristic for the agent")
+
+async def main(argv):
+    agent_class = getattr(agents, FLAGS.agent)
+    function = getattr(search, FLAGS.function)
+    heuristic = getattr(search, FLAGS.heuristic)
     shutdown_event = asyncio.Event()
-    myApp = App(1000, 1000, True)
-    #a = OneGoalAgent(shutdown_event, greedySearch, manhattanHeuristic)
-    #a = UnpaintedAgent(shutdown_event, aStarSearch, unPaintedInconsistentHeuristic)
-    #a = AnyAgent(shutdown_event, breadthFirstSearch)
-    #a = AnyAgent(shutdown_event, depthFirstSearch)
-    a = AnyAgent(shutdown_event, greedySearch, manhattanHeuristic)
-    #a = AnyAgent(shutdown_event, aStarSearch, manhattanHeuristic)
-    #a = AnyAgent(shutdown_event, uniformCostSearch)
+    myApp = Sim(FLAGS.height, FLAGS.width, True,"./layouts/" + FLAGS.layout)
+    a = agent_class(shutdown_event, function, heuristic)
     await asyncio.gather(
         myApp.run(shutdown_event), a.interact(myApp.scene), return_exceptions=True
     )
     myApp.close()
 
+def application(argv):
+    asyncio.run(main(argv))
 
 if __name__ == "__main__":
-
-    asyncio.run(main())
+    logging.set_verbosity(logging.INFO)
+    app.run(application)
+    
