@@ -21,13 +21,16 @@ async def main(argv):
     function = getattr(search, FLAGS.function)
     heuristic = getattr(search, FLAGS.heuristic)
     shutdown_event = asyncio.Event()
-    myApp = Sim(FLAGS.height, FLAGS.width, True,"./layouts/" + FLAGS.layout)
-    a = agent_class(function, heuristic)
-    runner = Runner([a], shutdown_event)
+    simulation = Sim(FLAGS.height, FLAGS.width, True,"./layouts/" + FLAGS.layout)
+    scene = simulation.scene
+    agents_list = []
+    for agent in scene.agents:
+        agents_list.append(agent_class(agent, function, heuristic))
+    runner = Runner(agents_list, shutdown_event)
     await asyncio.gather(
-        myApp.run(shutdown_event), runner.interact(myApp.scene), return_exceptions=True
+        simulation.run(shutdown_event), runner.interact(simulation.scene), return_exceptions=True
     )
-    myApp.close()
+    simulation.close()
 
 def application(argv):
     asyncio.run(main(argv))

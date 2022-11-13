@@ -3,9 +3,9 @@ from scene import Scene
 from bitarray.util import zeros, ba2int, int2ba
 
 class UnpaintedSearch(Search):
-    def __init__(self, scene:Scene, cost_fn=lambda n:1) -> None:
+    def __init__(self, agent, scene:Scene, cost_fn=lambda n:1) -> None:
         self.scene = scene
-        self._start = tuple(scene.agents[0])
+        self._start = agent
         self._goals = scene.get_goals()
         self._goals_lenght = len(self._goals)
         self._reached = zeros(self._goals_lenght)

@@ -4,7 +4,7 @@ from search import UnpaintedSearch
 
 class UnpaintedAgent(Agent):
     def __call__(self, scene:Scene):
-        search = UnpaintedSearch(scene)
+        search = UnpaintedSearch(self.agent, scene)
         path = self.path(self.fn(search))
         while path:
             yield next(path)
