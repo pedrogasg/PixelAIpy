@@ -14,16 +14,14 @@ const float M_PI = 3.1415926538;
 
 void main() {
     vec4 color = is_agent > .5 ? vec4(1., 0.6,0.,1.) : push.color;
+    float  d = length( max(abs(center)-.8,0.) );
     if(current_state.x > 0.5 && is_agent < .5){
-        outColor = vec4(0., 0., 0., 1.);
-    }else if (center.x < -0.9 || center.x > 0.9 || center.y < -0.9 || center.y > 0.9) {
-        float distance = sqrt(dot(center, center));
-        outColor = vec4(color.xyz, 1.2-distance);     
-    }else if(current_state.y > 0.5 && is_agent < .5){
-        outColor = vec4(1., 1.,1.,1.);
+        outColor = vec4(vec3( smoothstep(.1,.15,d)* smoothstep(.1,.9,d)) ,1.0);
+    }else if(current_state.y > 0.5 && is_agent < .5){   
+        outColor = vec4(1.-vec3( smoothstep(.1,.15,d)* smoothstep(.9,.1,d)) ,1.0);
     }
     else{
-        outColor = color;
+        outColor = vec4(color.xyz-vec3( smoothstep(.1,.15,d)* smoothstep(.9,.1,d)) ,color.w);
     }
     
 }
