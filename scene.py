@@ -97,27 +97,32 @@ class Scene:
         moves = 'up', 'down', 'left', 'right'
         return [((i,j),m) for i, j, a, m in zip(indices[0], indices[1], actions, moves) if a > 0]
 
-    def move_right(self, agent_index):
-        agent = self.agents[agent_index]
-        self.agents[agent_index] = [agent[0], agent[1] + self.actions(agent_index)[3]]
+    def move_right(self, agent, actions):
+        return [agent[0], agent[1] + actions[3]]
        
-    def move_left(self, agent_index):
-        agent = self.agents[agent_index]
-        self.agents[agent_index] = [agent[0], agent[1] - self.actions(agent_index)[2]]
+    def move_left(self, agent, actions):
+        return [agent[0], agent[1] - actions[2]]
     
-    def move_up(self, agent_index):
-        agent = self.agents[agent_index]
-        self.agents[agent_index] = [agent[0] - self.actions(agent_index)[0], agent[1] ]
+    def move_up(self, agent, actions):
+        return [agent[0] - actions[0], agent[1] ]
 
-    def move_down(self, agent_index):
-        agent = self.agents[agent_index]
-        self.agents[agent_index] = [agent[0] + self.actions(agent_index)[1], agent[1]]
+    def move_down(self, agent, actions):
+        return [agent[0] + actions[1], agent[1]]
     
     def direction_move(self, direction, agent_index):
+        actions = self.actions(agent_index)
+        agent = self.agents[agent_index]
         if direction in self.movement_set:
-            self.movement_set[direction](agent_index)
+            new_agent = self.movement_set[direction](agent, actions)
+            self.agents[agent_index] = new_agent
+            return new_agent
+        else:
+            return agent
 
-    def random_move(self):
-        movent_set = [self.move_down, self.move_up, self.move_left, self.move_right]
-        direction = np.random.choice(range(4))
-        movent_set[direction]()
+    def random_move(self, agent_index):
+        actions = self.actions(agent_index)
+        agent = self.agents[agent_index]
+        direction = np.random.choice(self.movement_set.keys)
+        new_agent = self.movement_set[direction](agent, actions)
+        self.agents[agent_index] = new_agent
+        return new_agent

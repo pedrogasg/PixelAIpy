@@ -11,7 +11,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args" : ["--layout","openMaze.npy","--agent","OneGoalAgent","--function","aStarSearch","--heuristic","manhattanHeuristic"]
+            "args" : ["--width", "1400", "--height", "1400","--layout","openMaze.npy","--agent","OneGoalAgent","--function","aStarSearch","--heuristic","manhattanHeuristic"]
         },
         {
             "name": "Big Search Sub optimal",
@@ -20,7 +20,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args" : ["--layout","bigSearch.npy","--agent","AnyAgent","--function","aStarSearch","--heuristic","manhattanHeuristic"]
+            "args" : ["--width", "1400", "--height", "1400","--layout","bigSearch.npy","--agent","AnyAgent","--function","aStarSearch","--heuristic","manhattanHeuristic"]
         },
         {
             "name": "Big Search",
@@ -29,7 +29,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args" : ["--layout","bigSearch.npy","--agent","UnpaintedAgent","--function","aStarSearch","--heuristic","unPaintedInconsistentHeuristic"]
+            "args" : ["--width", "1400", "--height", "1400","--layout","bigSearch.npy","--agent","UnpaintedAgent","--function","aStarSearch","--heuristic","unPaintedInconsistentHeuristic"]
         }
     ]
 }

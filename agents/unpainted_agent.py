@@ -6,5 +6,7 @@ class UnpaintedAgent(Agent):
     def __call__(self, scene:Scene):
         search = UnpaintedSearch(self.agent, scene)
         path = self.path(self.fn(search))
+        yield True
         while path:
-            yield next(path)
+            agent = yield next(path)
+            self.agent = tuple(agent)

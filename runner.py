@@ -7,10 +7,13 @@ class Runner:
 
     async def interact(self, scene:Scene):
         actions = [agent(scene) for agent in self.agents]
+        positions = [agent.agent for agent in self.agents]
+        for action in actions:
+            next(action)
         while not self.shutdown.is_set():
             #glfw.post_empty_event()
             for i, action in enumerate(actions):
-                action = next(action)
-                
-                scene.direction_move(action, i)
+                direction = action.send(positions[i])
+                p = scene.direction_move(direction, i)
+                positions[i] = p
                 await asyncio.sleep(0.016)

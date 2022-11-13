@@ -14,5 +14,7 @@ class AnyAgent(Agent):
             start_state = current_search.last_state
             goals.remove(start_state)
         path = self.path(xpath)
+        yield True
         while path:
-            yield next(path)
+            agent = yield next(path)
+            self.agent = tuple(agent)
