@@ -201,15 +201,15 @@ class Engine:
 
         self.meshes = vertex_object.VertexObject()
 
-        meshType = TRIANGLE
-        self.meshes.consume(meshType, self.scene.vertices)
-
+        meshType = SCENE
+        self.meshes.consume(meshType, self.scene.vertices, self.scene.vertex_size)
         finalization_chunk = vertex_object.VertexBufferFinalizationStruct()
         finalization_chunk.command_buffer = self.mainCommandbuffer
         finalization_chunk.logical_device = self.device
         finalization_chunk.physical_device = self.physicalDevice
         finalization_chunk.queue = self.graphicsQueue
         self.meshes.finalize(finalization_chunk)
+        self.scene.vertices = self.meshes.recover_view(meshType, self.scene.vertex_size)
 
     def prepare_scene(self, commandBuffer):
 
@@ -265,7 +265,7 @@ class Engine:
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self.pipeline)
 
         self.prepare_scene(commandBuffer)
-        vertexCount = self.meshes.sizes[TRIANGLE]
+        vertexCount = self.meshes.sizes[SCENE]
         # for position in scene.triangle_positions:
 
         model_transform = np.array(self.scene.push_constant, dtype=np.float32)

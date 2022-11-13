@@ -12,11 +12,24 @@ class Scene:
         return cls(h,w,state)
 
 
+    def create_agent(self, x, y):
+        agent = np.zeros(self.vertex_size)
+        return [x, y]
+
+    def populate(self, vertices, x, y, position):
+        size_w, size_h = self.size
+        vertices[position] = (x * size_w) - ((self.width / 2.) * size_w)
+        vertices[position + 1] = (y * size_h) - ((self.height / 2.) * size_h)
+        vertices[position + 2] = x
+        vertices[position + 3] = y
+
     def __init__(self, height, width, state=None):
         self.dirty = False
 
         self.vertex_size = 8
         self.vertices = np.zeros(height * width * self.vertex_size, dtype = np.float32)
+        self.height = height
+        self.width = width
         size_h = 2. / height
         size_w = 2. / width
         self.size = [size_w, size_h]
@@ -24,19 +37,16 @@ class Scene:
 
             for j in range(width):
                 position = ((i * width) + j) * self.vertex_size
-                self.vertices[position] = (j * size_w) - ((width / 2.) * size_w)
-                self.vertices[position + 1] = (i * size_h) - ((height / 2.) * size_h)
-                self.vertices[position + 2] = j
-                self.vertices[position + 3] = i
+                self.populate(self.vertices, j, i, position)
+
 
         self.color = [0.9, 0.9, 0.9, 0.5]
-        self.height = height
-        self.width = width
+        self.agents = []
         if state is None:
             self.world_state = np.random.choice([0,1],(height,width), p=[0.15,0.85]) # np.ones((height, width), dtype=int) # np.random.choice([0,1],(height,width), p=[0.1,0.9])
             self.painted_state = np.copy(self.world_state)
             xs, ys = np.where(self.world_state == 1)
-            self.agents = [[xs[0],ys[0]]]
+            self.agents.append(self.create_agent([xs[0],ys[0]]))
             self.goals =  [(x, y) for x, y in zip(xs,ys)]
         else:
             world_state = np.ones((height, width), dtype=int)
@@ -44,7 +54,8 @@ class Scene:
             self.world_state = world_state
             self.painted_state = np.copy(self.world_state)
             xs, ys = np.where(state == -1)
-            self.agents = [[x, y] for x, y in zip(xs, ys)]
+            for x, y in zip(xs, ys):
+                self.agents.append(self.create_agent(x, y))
             self.update_vertices(state, 2, 5, self.painted_state)
             xs, ys = np.where(state == 1)
             self.goals =  [(x, y) for x, y in zip(xs,ys)]

@@ -26,6 +26,6 @@ import numpy as np
 import pyrr
 
 #----- Mesh Types ----#
-TRIANGLE = 0
-SQUARE = 1
+SCENE = 0
+AGENTS = 1
 STAR = 2

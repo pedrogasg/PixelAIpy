@@ -19,17 +19,24 @@ class VertexObject:
         self.offset = 0
         self.offsets = {}
         self.sizes = {}
+        self.data_sizes = {}
         self.lump = np.array([],dtype=np.float32)
     
-    def consume(self, meshType, vertexData):
+    def consume(self, meshType, vertexData, vertex_size):
 
-        self.lump = vertexData
-
-        vertexCount = int(vertexData.size // 8)
-
+        self.lump = np.append(self.lump, vertexData)
+        data_size = vertexData.size
+        vertexCount = int(data_size // vertex_size)
+        
+        self.data_sizes[meshType] = data_size
         self.offsets[meshType] = self.offset
         self.sizes[meshType] = vertexCount
         self.offset += vertexCount
+
+    def recover_view(self, meshType, vertex_size):
+        initial_offset = self.offsets[meshType] * vertex_size
+        data_size = self.data_sizes[meshType]
+        return self.lump[initial_offset:data_size]
 
     @classmethod
     def _input_for_staging(cls, lump, finalization_chunk):
