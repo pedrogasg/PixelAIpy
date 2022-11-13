@@ -2,6 +2,7 @@ import agents
 import search
 import asyncio
 from sim import Sim
+from runner import Runner
 from absl import app
 from absl import flags
 from absl import logging
@@ -21,9 +22,10 @@ async def main(argv):
     heuristic = getattr(search, FLAGS.heuristic)
     shutdown_event = asyncio.Event()
     myApp = Sim(FLAGS.height, FLAGS.width, True,"./layouts/" + FLAGS.layout)
-    a = agent_class(shutdown_event, function, heuristic)
+    a = agent_class(function, heuristic)
+    runner = Runner([a], shutdown_event)
     await asyncio.gather(
-        myApp.run(shutdown_event), a.interact(myApp.scene), return_exceptions=True
+        myApp.run(shutdown_event), runner.interact(myApp.scene), return_exceptions=True
     )
     myApp.close()
 

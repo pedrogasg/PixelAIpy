@@ -8,23 +8,22 @@ class Agent:
     algorithm for a supplied search problem, then play the path in the given scene
     """
 
-    def __init__(self, shutdown, fn=depthFirstSearch, heur=None) -> None:
-        self.shutdown = shutdown
+    def __init__(self, fn=depthFirstSearch, heur=None) -> None:
         if heur is not None:
             self.fn = lambda x: fn(x, heur)
         else:
             self.fn = fn
         self.search = Search()
 
+    def __call__(self, scene:Scene):
+        path = self.path(self.fn(self.search))
+        while path:
+            yield next(path)
+        
+
     def path(self, array):
         while array:
             yield array.pop(0)
 
-    async def interact(self, scene:Scene):
-        path = self.path(self.fn(self.search))
-        while path and not self.shutdown.is_set():
-            #glfw.post_empty_event()
-            scene.direction_move(next(path))
-            await asyncio.sleep(0.016)
 
 

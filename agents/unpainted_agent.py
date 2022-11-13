@@ -3,6 +3,8 @@ from scene import Scene
 from search import UnpaintedSearch
 
 class UnpaintedAgent(Agent):
-    async def interact(self, scene:Scene):
-        self.search = UnpaintedSearch(scene)
-        await super().interact(scene=scene)
+    def __call__(self, scene:Scene):
+        search = UnpaintedSearch(scene)
+        path = self.path(self.fn(search))
+        while path:
+            yield next(path)
