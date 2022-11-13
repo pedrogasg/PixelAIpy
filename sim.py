@@ -84,7 +84,7 @@ class Sim:
             glfw.poll_events()
             #glfw.wait_events()
             self.move_controls()
-            self.scene.add_state(self.scene.agent)
+            self.scene.add_state()
             self.graphicsEngine.render()
             await asyncio.sleep(0)
 

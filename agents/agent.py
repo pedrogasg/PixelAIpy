@@ -13,12 +13,9 @@ class Agent:
             self.fn = lambda x: fn(x, heur)
         else:
             self.fn = fn
-        self.search = Search()
 
     def __call__(self, scene:Scene):
-        path = self.path(self.fn(self.search))
-        while path:
-            yield next(path)
+        raise NotImplemented
         
 
     def path(self, array):
