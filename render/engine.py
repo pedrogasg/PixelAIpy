@@ -16,7 +16,7 @@ from render import (
     make_command_pool,
     make_command_buffer,
     make_fence,
-    make_semaphore
+    make_semaphore,
 )
 
 import render.sync as sync
@@ -201,15 +201,22 @@ class Engine:
 
         self.meshes = vertex_object.VertexObject()
 
-        meshType = SCENE
-        self.meshes.consume(meshType, self.scene.vertices, self.scene.vertex_size)
+        self.meshes.consume(SCENE, self.scene.vertices, self.scene.vertex_size)
+
+        self.meshes.consume(AGENTS, self.scene.agents_vertex, self.scene.vertex_size)
+
+
         finalization_chunk = vertex_object.VertexBufferFinalizationStruct()
         finalization_chunk.command_buffer = self.mainCommandbuffer
         finalization_chunk.logical_device = self.device
         finalization_chunk.physical_device = self.physicalDevice
         finalization_chunk.queue = self.graphicsQueue
+
         self.meshes.finalize(finalization_chunk)
-        self.scene.vertices = self.meshes.recover_view(meshType, self.scene.vertex_size)
+        self.scene.vertices = self.meshes.recover_view(SCENE, self.scene.vertex_size)
+        self.scene.agents_vertex = self.meshes.recover_view(
+            AGENTS, self.scene.vertex_size
+        )
 
     def prepare_scene(self, commandBuffer):
 
@@ -267,7 +274,6 @@ class Engine:
         self.prepare_scene(commandBuffer)
         vertexCount = self.meshes.sizes[SCENE]
         # for position in scene.triangle_positions:
-
         model_transform = np.array(self.scene.push_constant, dtype=np.float32)
         # model_transform = pyrr.matrix44.create_from_translation(vec = scene.color, dtype = np.float32)
         objData = ffi.cast("float *", ffi.from_buffer(model_transform))
@@ -288,6 +294,34 @@ class Engine:
             firstVertex=0,
             firstInstance=0,
         )
+
+        firstVertex = self.meshes.offsets[AGENTS]
+        vertexCount = self.meshes.sizes[AGENTS]
+        for i, position in enumerate(self.scene.agents_positions):
+            firstVertex += i
+            x, y = self.scene.position((position[1], position[0]))
+            model_transform = np.array(
+                self.scene.get_push_constant([x, y]), dtype=np.float32
+            )
+
+            objData = ffi.cast("float *", ffi.from_buffer(model_transform))
+            vkCmdPushConstants(
+                commandBuffer=commandBuffer,
+                layout=self.pipelineLayout,
+                stageFlags=VK_SHADER_STAGE_VERTEX_BIT
+                | VK_SHADER_STAGE_GEOMETRY_BIT
+                | VK_SHADER_STAGE_FRAGMENT_BIT,
+                offset=0,
+                size=4 * self.scene.push_constant_size,
+                pValues=objData,
+            )
+            vkCmdDraw(
+                commandBuffer=commandBuffer,
+                vertexCount=1,
+                instanceCount=1,
+                firstVertex=firstVertex,
+                firstInstance=0,
+            )
 
         vkCmdEndRenderPass(commandBuffer)
 

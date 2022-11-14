@@ -86,6 +86,7 @@ class Sim:
             self.move_controls()
             self.scene.add_state()
             self.graphicsEngine.render()
+            self.calculate_framerate()
             await asyncio.sleep(0)
 
         shutdown.set()

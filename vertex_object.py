@@ -27,7 +27,6 @@ class VertexObject:
         self.lump = np.append(self.lump, vertexData)
         data_size = vertexData.size
         vertexCount = int(data_size // vertex_size)
-        
         self.data_sizes[meshType] = data_size
         self.offsets[meshType] = self.offset
         self.sizes[meshType] = vertexCount
@@ -36,7 +35,7 @@ class VertexObject:
     def recover_view(self, meshType, vertex_size):
         initial_offset = self.offsets[meshType] * vertex_size
         data_size = self.data_sizes[meshType]
-        return self.lump[initial_offset:data_size]
+        return self.lump[initial_offset:initial_offset+data_size]
 
     @classmethod
     def _input_for_staging(cls, lump, finalization_chunk):

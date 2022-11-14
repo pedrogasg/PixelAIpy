@@ -24,7 +24,7 @@ async def main(argv):
     simulation = Sim(FLAGS.height, FLAGS.width, True,"./layouts/" + FLAGS.layout)
     scene = simulation.scene
     agents_list = []
-    for agent in scene.agents:
+    for agent in scene.agents_positions:
         agents_list.append(agent_class(agent, function, heuristic))
     runner = Runner(agents_list, shutdown_event)
     await asyncio.gather(
