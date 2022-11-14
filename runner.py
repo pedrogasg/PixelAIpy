@@ -7,7 +7,7 @@ class Runner:
 
     async def interact(self, scene:Scene):
         actions = [agent(scene) for agent in self.agents]
-        positions = [agent.agent for agent in self.agents]
+        positions = [agent.position for agent in self.agents]
         for action in actions:
             next(action)
         while not self.shutdown.is_set():

@@ -6,7 +6,7 @@ from search import AnySearch
 class AnyAgent(Agent):
     def __call__(self, scene:Scene):
         xpath = []
-        start_state = self.agent
+        start_state = self.position
         goals = scene.get_goals()
         while len(goals) > 0:
             current_search = AnySearch(scene, start_state, goals)
@@ -16,5 +16,5 @@ class AnyAgent(Agent):
         path = self.path(xpath)
         yield True
         while path:
-            agent = yield next(path)
-            self.agent = tuple(agent)
+            position = yield next(path)
+            self.position = tuple(position)

@@ -8,8 +8,8 @@ class Agent:
     algorithm for a supplied search problem, then play the path in the given scene
     """
 
-    def __init__(self, agent, fn=depthFirstSearch, heur=None) -> None:
-        self.agent = tuple(agent)
+    def __init__(self, position, fn=depthFirstSearch, heur=None) -> None:
+        self.position = tuple(position)
         if heur is not None:
             self.fn = lambda x: fn(x, heur)
         else:
